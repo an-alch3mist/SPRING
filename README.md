@@ -1,7 +1,7 @@
 
 ```cs
 
-// SPRING //
+// ROPE //
 _points[0] = _start.position;
 _points[_points.Count - 1] = _end.position;
 
