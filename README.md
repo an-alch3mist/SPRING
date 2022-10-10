@@ -1,4 +1,4 @@
+## TEXT.typewrite()
 
-
-https://user-images.githubusercontent.com/83577810/194792899-8ce5d036-0076-41cb-bdb0-aef93d083725.mp4
+https://user-images.githubusercontent.com/83577810/194792988-f6a625d8-92c1-4714-bbdc-13d0e28b0bbe.mp4
 
