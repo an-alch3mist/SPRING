@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,8 +32,12 @@ public class DEBUG_TEXT_0 : MonoBehaviour
         yield return null;
         #endregion
 
+        //
+        OBJ.INITIALIZE();
+
 
         C.capture_mode = false;
+
 
 
         C.time = 20;
@@ -100,7 +104,7 @@ public class DEBUG_TEXT_0 : MonoBehaviour
     public class TEXT
     {
 
-        TMPro.TextMeshPro tm;
+        public TMPro.TextMeshPro tm;
         public GameObject G;
 
 
@@ -114,6 +118,7 @@ public class DEBUG_TEXT_0 : MonoBehaviour
             tm.alignment = TMPro.TextAlignmentOptions.Center;
 
 
+            G.transform.parent = OBJ.holder;
             G.SetActive(false);
         }
 
@@ -186,7 +191,28 @@ public class DEBUG_TEXT_0 : MonoBehaviour
     #endregion
 
 
+    #region OBJ
 
+    public class OBJ
+    {
+        #region INITIALIZE
+
+        public static Transform holder;
+
+        public static void INITIALIZE()
+        {
+            if(GameObject.Find("holder") != null)
+            {
+                GameObject.Destroy(GameObject.Find("holder"));
+            }
+
+            holder = new GameObject("holder").transform;
+        }
+        #endregion
+
+
+    }
+    #endregion
 
 
     #region C
