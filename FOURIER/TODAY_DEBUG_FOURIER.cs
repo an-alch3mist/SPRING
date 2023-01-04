@@ -221,23 +221,52 @@ public class DEBUG_FOURIER_0 : MonoBehaviour
         
         
         /*
-        N = (dist_end - dist_start) * N_full
-        P.Add( lerp dist_start to dist_end by i * 1f / N )
+        P.Add( path_length * i * 1f / N )
         */
-        public List<Vector2> get_points_between(float t_start , float t_end , int N_full = 100)
+        public List<Vector2> get_const_spaced_points_0(int N = 100)
         {
-            int N = N_full * ( get_dist(t_end) - get_dist(t_start) ) / get_dist(1f);
-        
+            float path_length = get_dist(1f);
+
             List<Vector2> P = new List<Vector2>();
             //
             for(int i = 0 ; i <= N ; i += 1)
             {
-                float dist = lerp(get_dist(t_start) , get_dist(t_end) , i * 1f/N );
+                float dist = path_length * i * 1f / N;
                 P.Add(pos(get_t(dist)));
             }
             //
             return P;
         }
+        
+        
+        /*
+        P.Add( path_length * i * 1f / N - de)
+        P.Add( path_length * i * 1f / N + de)
+        */
+        public List<Vector2> get_const_spaced_points_1(int N = 100 , int N_de = 4000)
+        {
+            float path_length = get_dist(1f);
+            float de = path_length * 1f / N_de;
+
+            List<Vector2> P = new List<Vector2>();
+            //
+            
+            P.Add(pos(0f));
+            P.Add(pos(get_t(0f + de)));
+            for(int i = 1 ; i < N ; i += 1)
+            {
+                float dist = path_length * i * 1f / N;
+                P.Add(pos(get_t(path_length * i * 1f / N - de)));
+                P.Add(pos(get_t(path_length * i * 1f / N + de)));
+                //
+            }
+            P.Add(pos(get_t(path_length - de )));
+            P.Add(pos(1f));
+            //
+            return P;
+        }
+        
+        
         
         
         
