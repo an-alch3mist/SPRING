@@ -122,15 +122,26 @@ public class DEBUG_FOURIER_0 : MonoBehaviour
 
 
 
+    /*
+    usage -
+        // initalize bezier_path.P = pos_1D //
+        // do somthng with v2 bezier_path.pos(t) //
 
+        // intialize bezier_path.initialize_LUT() //
+        // do somthng with L<v2> get_points_between(t_start , t_end , N_full) //
+    */
     public class BEZIER_PATH
     {
-        // in
+        /*
+        in -
+            L<v2>
+        */
         public List<Vector2> P;
     
     
-        /* out
-        pos(t)
+        /* 
+        out -
+            v2 pos(t)
         */
         
         // pos //
@@ -177,6 +188,106 @@ public class DEBUG_FOURIER_0 : MonoBehaviour
         
         
         
+        /*
+        intialize .... LUT of count
+        out -
+            L<v2> get_points_between(t_start , t_end , N_full)
+        */
+        
+        /* 
+        t - dist const_dt 
+        0 : t
+        1 : dist
+        */
+        float[][] LUT;
+        public void INTIALIZE_LUT()
+        {        
+            int N = 10000;
+            LUT = new float[N][];
+            
+            float sum = 0f;
+            LUT[0] = new float[2] { 0f , sum };
+            //
+            for(int i = 0 ; i <= N ; i += 1)
+            {
+                float t_prev = (i - 1) * 1f / N;
+                float t_curr = i * 1f / N;         
+                
+                sum += mag( pos(t_curr - t_prev) );
+                LUT[i] = new float[2] { t_curr , sum };
+            }
+            //
+        }
+        
+        
+        /*
+        N = (dist_end - dist_start) * N_full
+        P.Add( lerp dist_start to dist_end by i * 1f / N )
+        */
+        public List<Vector2> get_points_between(float t_start , float t_end , int N_full = 100)
+        {
+            int N = N_full * ( get_dist(t_end) - get_dist(t_start) ) / get_dist(1f);
+        
+            List<Vector2> P = new List<Vector2>();
+            //
+            for(int i = 0 ; i <= N ; i += 1)
+            {
+                float dist = lerp(get_dist(t_start) , get_dist(t_end) , i * 1f/N );
+                P.Add(pos(get_t(dist)));
+            }
+            //
+            return P;
+        }
+        
+        
+        
+        // tool //
+        static float mag(Vector2 v) { return Mathf.Sqrt(v.x * v.x + v.y * v.y); }
+        
+        static float inv_lerp(float a, float b , float v) 
+        { 
+            return (v - a)/(b - a); 
+        }
+        
+        static float lerp( float a , float b , float t)
+        {
+            float n = b - a;
+            return a + n * t;
+        }
+        
+        // tool //
+        
+        // ad //
+        static float get_dist(float[][] LUT , float t)
+        {
+            if ( t <= 0f ) return 0f;
+            if ( t >= 1f ) return LUT[LUT.Length - 1][1];
+        
+            int i = 1;
+            for(; i <= LUT.Length - 1 ; i +=1)
+                if(LUT[i][0] > t)
+                    break
+        
+            float dt = inv_lerp(LUT[i - 1][0] , LUT[i][0] , t);
+            
+            return lerp( LUT[i - 1][1] , LUT[i][1] , dt );
+        }
+        
+        static float get_t(float[][] LUT , float dist)
+        {
+            if ( dist <= 0f )                       return 0f;
+            if ( dist >= LUT[LUT.Length - 1][1] )   return 1f;
+        
+            int i = 1;
+            for(; i <= LUT.Length - 1 ; i +=1)
+                if(LUT[i][1] > dist)
+                    break
+        
+            float d_dist = inv_lerp(LUT[i - 1][1] , LUT[i][1] , dist);
+            
+            return lerp( LUT[i - 1][1] , LUT[i][1] , d_dist );
+        }
+        // ad //
         
     }
 
