@@ -174,10 +174,10 @@ public class DEBUG_FOURIER_0 : MonoBehaviour
         //// bezier_pos ////
         Vector2 bezier_pos(Vector2 a , Vector2 b , Vector2 c , Vector2 d , float t)
         {
-            return 1    *   t * t * t   * (1    )                     * P[0] +
-                   3    *   t * t       * (1 - t)                     * P[1] +
-                   3    *   t           * (1 - t) * (1 - t)           * P[2] +
-                   1    *   1           * (1 - t) * (1 - t) * (1 - t) * P[3];
+            return 1    *   1                   * (1 - t) * (1 - t) * (1 - t)   * P[0] +
+                   3    *   t                   * (1 - t) * (1 - t)             * P[1] +
+                   3    *   t * t               * (1 - t)                       * P[2] +
+                   1    *   t * t * t           * (1    )                       * P[3];
         
         }
         //// bezier_pos ////
