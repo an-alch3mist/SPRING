@@ -1,13 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 
 
-
-
-
+#region editor_wnidow_log
 public class editor_window_log : EditorWindow
 {
 
@@ -40,7 +38,7 @@ public class editor_window_log : EditorWindow
 		_skin = Resources.Load<GUISkin>("_skin");
 		// Debug.Log(_skin);
 		_instance = this;
-	} 
+	}
 	#endregion
 
 
@@ -131,7 +129,7 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 		*/
 		#endregion
 
-	} 
+	}
 	#endregion
 
 
@@ -139,21 +137,21 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 	{
 
 		#region str_ref
-/*
-		string str_ref =
-@"
+		/*
+				string str_ref =
+		@"
 
-// scroll = EditorGUILayout.BeginScrollView(scroll);
-//GUI.Box(new Rect(Vector2.zero, new Vector2(1000 , 300)) , Resources.Load<Texture2D>(sprite));
-//GUI.TextField(new Rect(new Vector2(5 , 5), new Vector2(position.width, 200)), str, _skin.GetStyle(Header_0));
-// EditorGUI.BeginDisabledGroup(true);
-EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
-// EditorGUI.EndDisabledGroup();
+		// scroll = EditorGUILayout.BeginScrollView(scroll);
+		//GUI.Box(new Rect(Vector2.zero, new Vector2(1000 , 300)) , Resources.Load<Texture2D>(sprite));
+		//GUI.TextField(new Rect(new Vector2(5 , 5), new Vector2(position.width, 200)), str, _skin.GetStyle(Header_0));
+		// EditorGUI.BeginDisabledGroup(true);
+		EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
+		// EditorGUI.EndDisabledGroup();
 
-// EditorGUILayout.EndScrollView();
+		// EditorGUILayout.EndScrollView();
 
-";
-		*/
+		";
+				*/
 		#endregion
 
 
@@ -171,10 +169,10 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 
 
 		int max_w = 0;
-		for(int i0 = 0; i0 < str_ref.Split('\n').Length; i0 += 1)
+		for (int i0 = 0; i0 < str_ref.Split('\n').Length; i0 += 1)
 		{
 			int sum = 0;
-			for(int i1 = 0; i1 < str_ref.Split('\n')[i0].Length; i1 += 1)
+			for (int i1 = 0; i1 < str_ref.Split('\n')[i0].Length; i1 += 1)
 			{
 				sum += 1;
 			}
@@ -185,19 +183,19 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 		}
 
 
-		
-		int box_w = (int)( max_w * _style_t.fontSize * 0.62f),
-			box_h = (int)( str_ref.Split('\n').Length * _style_t.fontSize * 1.5f ) ;
+
+		int box_w = (int)(max_w * _style_t.fontSize * 0.62f),
+			box_h = (int)(str_ref.Split('\n').Length * _style_t.fontSize * 1.5f);
 
 		int dh = 35;
 
 		#region scroll_begin_....!disabled
-		
+
 		// available-view , scroll_pos , over-all-view 
 		scroll = GUI.BeginScrollView(
-			new Rect(0, 0, w, h), 
+			new Rect(0, 0, w, h),
 			scroll,
-			new Rect(0, 0, box_w , box_h)
+			new Rect(0, 0, box_w, box_h)
 		);
 		#endregion
 
@@ -206,7 +204,7 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 
 
 		GUI.Box(
-				new Rect(0, 0, Mathf.Max(box_w , w), Mathf.Max(box_h , h) ),
+				new Rect(0, 0, Mathf.Max(box_w, w), Mathf.Max(box_h, h)),
 				editor_window_log.str_ref,
 				_style_t
 		);
@@ -229,7 +227,7 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 		//
 		int offsetX = 20;
 
-		if (GUI.Button(new Rect(w - 30 - 10 - 30 - 10 - offsetX,  10, 30, 30), "CP", _style_b))
+		if (GUI.Button(new Rect(w - 30 - 10 - 30 - 10 - offsetX, 10, 30, 30), "CP", _style_b))
 		{
 			GUIUtility.systemCopyBuffer = editor_window_log.str_ref;
 		}
@@ -248,14 +246,33 @@ EditorGUILayout.TextField(str_ref, _skin.GetStyle(Header_0));
 
 }
 
+#endregion
 
 
 
-
+#region LOG
 /*
-
-0 1 
-__^
-
-
+usage : 
+	LOG.str ( string )
+	// will repaint and set gui text in editor_window_log
 */
+public static class LOG
+{
+
+	public static char blocks(int index = 0)
+	{
+		if (index == 0) return '█';
+		if (index == 1) return '■';
+
+		return '@';
+	}
+
+	public static void str(string str)
+	{
+		editor_window_log.str_ref = str;
+		editor_window_log._instance.Repaint();
+	}
+
+}
+
+#endregion
