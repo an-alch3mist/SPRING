@@ -661,9 +661,9 @@ namespace SPACE_FOURIER
         
         public void POS(Vector2 pos)            { G.transform.position           = new Vector3(pos.x , pos.y , G.transform.position.z ); }
         
-        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180 ); }
+        public void ROT(float angle)            { G.transform.localEulerAngles   = new Vector3(0f , 0f , angle / C.PI * 180 ); }
 
-        public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
+        public void SCALE(float x , float y)    { G.transform.localScale         = new Vector3(x , y , 1f); }
 
         
         public void mesh(Mesh mesh) { mf.sharedMesh = mesh; }
@@ -724,7 +724,7 @@ namespace SPACE_FOURIER
         
         public void POS(Vector2 pos)            { G.transform.position          = new Vector3(pos.x , pos.y , G.transform.position.z ); }
         
-        public void ROT(float angle)            { G.transform.localEulerAngles = new Vector3(0f, 0f, angle / C.PI * 180); }
+        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f, 0f, angle / C.PI * 180); }
 
         public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
 
