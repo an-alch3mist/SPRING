@@ -11,9 +11,6 @@ namespace SPACE_FOURIER
 
 	public class DEBUG_FOURIER_1 : MonoBehaviour
 	{
-
-
-
 		public Transform Tr_pos_0;
 		public Transform Tr_P_0;
 
@@ -99,14 +96,13 @@ namespace SPACE_FOURIER
 
 
 
-
+        #region FOURIER
 		/*
-		usage -
-			initalize fourier.bezier_path = bezier_path
-			fourier.INITIALIZE(Cn_count)
-
-			fourier.update__arrow_1D(t)
-			do somthng with arrow_1D[i] 
+		in - fourier.bezier_path
+		     fourier.INITIALIZE(Cn_count)
+			 fourier.update__arrow_1D(t) 
+			
+		out - somthng with arrow_1D[i] 
 		*/
 		public class FOURIER
 		{
@@ -201,7 +197,7 @@ namespace SPACE_FOURIER
 				for (int i = 0; i < N; i += 1)
 				{
 					float t = i * 1f / N;
-					sum += mul(f(t), polar(-2 * Mathf.PI * t * n));
+					sum += mul(f(t), Z.polar(-2 * Mathf.PI * t * n));
 				}
 				// rotate f(t) by -2 * pi * t * n //
 
@@ -212,7 +208,6 @@ namespace SPACE_FOURIER
 
 
 			#region Tool
-			// Tool //
 			public static Vector2 mul(Vector2 a, Vector2 b)
 			{
 				return new Vector2()
@@ -221,21 +216,103 @@ namespace SPACE_FOURIER
 					y = a.x * b.y + a.y * b.x
 				};
 			}
-
-
-			public static Vector2 polar(float angle)
-			{
-				return new Vector2()
-				{
-					x = Mathf.Cos(angle),
-					y = Mathf.Sin(angle)
-				};
-			}
-			// Tool // 
 			#endregion
 
 
 		}
+
+        #endregion
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //// STUFF ////
+    #region STUFF
+    
+    
+    /*
+	in -    bezier_path.P 
+	out -   bezier_path.pos(t) 
+
+	in -    bezier_path.initialize_LUT() 
+	out -   get_const_spaced_points_0(N) 
+	        get_const_spaced_points_1(N , N_e)         
+	*/
+
+	public class BEZIER_PATH
+	{
+		/*
+		in -    L<v2> P
+		out -   v2 pos(t)
+		*/
+		public List<Vector2> P;
+
+
+		// pos //
+		public Vector2 pos(float t)
+		{
+			if (t <= 0f) return P[0];
+			if (t >= 1f) return P[P.Count - 1];
+
+
+			int N = (P.Count - 1) / 3;
+
+			float i_F = N * t;
+			int i_I = (int)(N * t);
+
+			float dt = i_F - i_I;
+
+			return bezier_pos(
+				new Vector2[4]
+				{
+					P[i_I * 3 + 0],
+					P[i_I * 3 + 1],
+					P[i_I * 3 + 2],
+					P[i_I * 3 + 3],
+				},
+				dt
+			);
+
+		}
+		// pos //
+
+
+
+
+		#region TOOL
+		//// bezier_pos ////
+		static Vector2 bezier_pos(Vector2[] P, float t)
+		{
+			return  1 * 1 *                 (1 - t) * (1 - t) * (1 - t) * P[0] +
+					3 * t *                 (1 - t) * (1 - t)           * P[1] +
+					3 * t * t *             (1 - t)                     * P[2] +
+					1 * t * t * t *         (1)                         * P[3];
+
+		}
+		//// bezier_pos ////
+		#endregion
 
 
 
@@ -243,220 +320,585 @@ namespace SPACE_FOURIER
 
 
 		/*
-		usage -
-			initalize bezier_path.P = pos_1D 
-			do somthng with v2 bezier_path.pos(t) 
-
-			intialize bezier_path.initialize_LUT() 
-			do somthng with L<v2> get_const_spaced_points_0(N) 
+		in  - INTIALIZE_LUT()
+		out - get_const_spaced_points_0(int N = 100)
+		    - get_const_spaced_points_0(int N = 100 , int N_de = 400)
 		*/
 
-		public class BEZIER_PATH
+		/* 
+		0 : t
+		1 : dist
+		*/
+		float[][] LUT;
+		public void INTIALIZE_LUT()
 		{
-			/*
-			in -
-				L<v2>
-			*/
-			public List<Vector2> P;
+			int N = 10000;
+			LUT = new float[N][];
 
-
-			/* 
-			out -
-				v2 pos(t)
-			*/
-
-			// pos //
-			public Vector2 pos(float t)
+			float sum = 0f;
+			LUT[0] = new float[2] { 0f, sum };
+			//
+			for (int i = 0; i <= N; i += 1)
 			{
-				if (t <= 0f) return P[0];
-				if (t >= 1f) return P[P.Count - 1];
+				float t_prev = (i - 1) * 1f / N;
+				float t_curr = i * 1f / N;
 
-
-				int N = (P.Count - 1) / 3;
-
-				float i_F = N * t;
-				int i_I = (int)(N * t);
-
-				float dt = i_F - i_I;
-
-				return bezier_pos(
-					new Vector2[4]
-					{
-					P[i_I * 3 + 0],
-					P[i_I * 3 + 1],
-					P[i_I * 3 + 2],
-					P[i_I * 3 + 3],
-					},
-					dt
-				);
-
+				sum += Z.mag(pos(t_curr - t_prev));
+				LUT[i] = new float[2] { t_curr, sum };
 			}
-			// pos //
+			//
+		}
 
 
+		/*
+		P.Add( path_length * i * 1f / N )
+		*/
+		public List<Vector2> get_const_spaced_points_0(int N = 100)
+		{
+			float path_length = get_dist(LUT, 1f);
 
-
-			// tool //
-			//// bezier_pos ////
-			static Vector2 bezier_pos(Vector2[] P, float t)
+			List<Vector2> P = new List<Vector2>();
+			//
+			for (int i = 0; i <= N; i += 1)
 			{
-				return 1 * 1 * (1 - t) * (1 - t) * (1 - t) * P[0] +
-						3 * t * (1 - t) * (1 - t) * P[1] +
-						3 * t * t * (1 - t) * P[2] +
-						1 * t * t * t * (1) * P[3];
-
+				float dist = i * path_length * 1f / N;
+				P.Add(pos(get_t(LUT, dist)));
 			}
-			//// bezier_pos ////
-			// tool //
+			//
+			return P;
+		}
 
 
+		/*
+		P.Add( path_length * i * 1f / N - de)
+		P.Add( path_length * i * 1f / N + de)
+		*/
+		public List<Vector2> get_const_spaced_points_1(int N = 100 , int N_de = 400)
+		{
+			float path_length = get_dist(LUT, 1f);
+			float dist_e = path_length * 1f / N_de;
 
+			List<Vector2> P = new List<Vector2>();
+			//
 
-
-
-			/*
-			intialize .... LUT of count
-			out -
-				L<v2> get_points_between(t_start , t_end , N_full)
-			*/
-
-			/* 
-			t - dist const_dt 
-			0 : t
-			1 : dist
-			*/
-			float[][] LUT;
-			public void INTIALIZE_LUT()
+			P.Add(pos(0f));
+			P.Add(pos(get_t(LUT, 0f + dist_e)));
+			//
+			for (int i = 1; i < N; i += 1)
 			{
-				int N = 10000;
-				LUT = new float[N][];
-
-				float sum = 0f;
-				LUT[0] = new float[2] { 0f, sum };
-				//
-				for (int i = 0; i <= N; i += 1)
-				{
-					float t_prev = (i - 1) * 1f / N;
-					float t_curr = i * 1f / N;
-
-					sum += mag(pos(t_curr - t_prev));
-					LUT[i] = new float[2] { t_curr, sum };
-				}
+				float dist = i * path_length * 1f / N;
+				P.Add(pos(get_t(LUT, dist - dist_e)));
+				P.Add(pos(get_t(LUT, dist + dist_e)));
 				//
 			}
-
-
-			/*
-			P.Add( path_length * i * 1f / N )
-			*/
-			public List<Vector2> get_const_spaced_points_0(int N = 100)
-			{
-				float path_length = get_dist(LUT, 1f);
-
-				List<Vector2> P = new List<Vector2>();
-				//
-				for (int i = 0; i <= N; i += 1)
-				{
-					float dist = i * path_length * 1f / N;
-					P.Add(pos(get_t(LUT, dist)));
-				}
-				//
-				return P;
-			}
-
-
-			/*
-			P.Add( path_length * i * 1f / N - de)
-			P.Add( path_length * i * 1f / N + de)
-			*/
-			public List<Vector2> get_const_spaced_points_1(int N = 100, int N_de = 400)
-			{
-				float path_length = get_dist(LUT, 1f);
-				float dist_e = path_length * 1f / N_de;
-
-				List<Vector2> P = new List<Vector2>();
-				//
-
-				P.Add(pos(0f));
-				P.Add(pos(get_t(LUT, 0f + dist_e)));
-				//
-				for (int i = 1; i < N; i += 1)
-				{
-					float dist = i * path_length * 1f / N;
-					P.Add(pos(get_t(LUT, dist - dist_e)));
-					P.Add(pos(get_t(LUT, dist + dist_e)));
-					//
-				}
-				//
-				P.Add(pos(get_t(LUT, path_length - dist_e)));
-				P.Add(pos(1f));
-				//
-				return P;
-			}
-
-
-
-
-
-			#region Tool
-			// tool //
-			static float mag(Vector2 v) { return Mathf.Sqrt(v.x * v.x + v.y * v.y); }
-
-			static float inv_lerp(float a, float b, float v)
-			{
-				return (v - a) / (b - a);
-			}
-
-			static float lerp(float a, float b, float t)
-			{
-				float n = b - a;
-				return a + n * t;
-			}
-
-			// tool // 
-			#endregion
-
-			#region ad
-			// ad //
-			static float get_dist(float[][] LUT, float t)
-			{
-				if (t <= 0f) return 0f;
-				if (t >= 1f) return LUT[LUT.Length - 1][1];
-
-				int i = 1;
-				for (; i <= LUT.Length - 1; i += 1)
-					if (LUT[i][0] > t)
-						break;
-
-				float dt = inv_lerp(LUT[i - 1][0], LUT[i][0], t);
-
-				return lerp(LUT[i - 1][1], LUT[i][1], dt);
-			}
-
-			static float get_t(float[][] LUT, float dist)
-			{
-				if (dist <= 0f) return 0f;
-				if (dist >= LUT[LUT.Length - 1][1]) return 1f;
-
-				int i = 1;
-				for (; i <= LUT.Length - 1; i += 1)
-					if (LUT[i][1] > dist)
-						break;
-
-				float d_dist = inv_lerp(LUT[i - 1][1], LUT[i][1], dist);
-
-				return lerp(LUT[i - 1][0], LUT[i][0], d_dist);
-			}
-			// ad // 
-			#endregion
-
+			//
+			P.Add(pos(get_t(LUT, path_length - dist_e)));
+			P.Add(pos(1f));
+			//
+			return P;
 		}
 
 
 
+		
 
+		#region ad
+		// ad //
+		static float get_dist(float[][] LUT, float t)
+		{
+			if (t <= 0f) return 0f;
+			if (t >= 1f) return LUT[LUT.Length - 1][1];
+
+			int i = 1;
+			for (; i <= LUT.Length - 1; i += 1)
+				if (LUT[i][0] > t)
+					break;
+
+			float dt = Z.inv_lerp( LUT[i - 1][0], LUT[i][0], t );
+
+			return lerp(LUT[i - 1][1], LUT[i][1], dt);
+		}
+
+		static float get_t(float[][] LUT, float dist)
+		{
+			if (dist <= 0f)                     return 0f;
+			if (dist >= LUT[LUT.Length - 1][1]) return 1f;
+
+			int i = 1;
+			for (; i <= LUT.Length - 1; i += 1)
+				if (LUT[i][1] > dist)
+					break;
+
+			float dt = inv_lerp(LUT[i - 1][1], LUT[i][1], dist);
+
+			return lerp(LUT[i - 1][0], LUT[i][0], dt);
+		}
+		// ad // 
+		#endregion
 
 	}
 
 
+    #endregion
+    //// STUFF ////
+
+
+
+
+    //// TOOL ////
+    #region TOOL
+    public static class Z
+    {
+        public static Vector3 lerp(Vector3 a , Vector3 b , float t)
+        {
+            Vector3 n = b - a;
+            return a + n * t;
+        }
+        
+        public static float lerp(float a , float b , float t)
+        {
+            float n = b - a;
+            return a + n * t;
+        }
+        
+        public static float dot(Vector3 a , Vector3 b)
+        {
+            return a.x * b.x + a.y * b.y + a.z * b.z;
+        }
+        
+        public static Vector2 polar(float angle)
+        {
+            return new Vector2()
+            {
+                x = Mathf.Cos(angle),
+                y = Mathf.Sin(angle)
+            };
+        }
+        
+        
+        
+        public static float inv_lerp( float a,  float b , float v)
+		{
+			return (v - a) / (b - a);
+		}
+        
+        
+        public static float mag(Vector2 v)
+        {
+            return Matf.Sqrt(v.x * v.x + v.y * v.y);
+        }
+        
+    }
+    
+    public static class C
+    {
+        public static float PI = Mathf.PI;
+        public static Vector2 zero = Vector2.zero;
+
+        #region round(x) , sign(x)
+    
+        public static int round(float x)
+        {
+            int frac = x - (int)x;
+            if(frac >= 0)
+                if(frac >= 0.5f)
+                    return (int)x + 1;
+                else
+                    return (int)x;
+            else
+                
+            
+        }
+        public static int sign(float x)
+        {
+            if(Mathf.abs(x) < 1f / 1000000 )
+                return 0;
+            
+            if( x > 0) return +1;
+            if( X < 0) return -1;
+        }
+    
+        
+        
+        #endregion
+        
+        
+        /*
+        format -
+            C.frames = 30
+            for(C.i = 0 ; C.i < C.frames ; C.i += 1)
+            {
+                // do somthng with C.t;       
+            }
+        */
+        
+        public static int C.frames = 30;
+        public static int i = 0;
+        public static float t { get { return C.i * 1f / (C.frames - 1); } }
+        
+        
+        
+        
+    }
+    
+    public class EASE
+    {
+        public enum TYPE
+        {
+            _lerp,
+            _smooth,
+            
+            _inQuad,
+            _outQuad,
+            
+            _inoutBack,
+            
+        }
+ 
+ 
+        public static TYPE _TYPE ; 
+        public static float f(float t)
+        {
+            if(t >= 1f) return 1f;
+            if(t <= 0f) return 0f;
+                
+
+            if(_TYPE == TYPE._lerp)
+            {
+                return t;
+            }
+            if(_TYPE == TYPE._smooth)
+            {
+                float Y = Mathf.Cos( t * C.PI );
+                return (-Y + 1f) / 2f;    
+            }
+            
+            if(_TYPE == TYPE._inQuad)
+            {
+                return x * x * x * x;
+            }
+            if(_TYPE == TYPE._outQuad)
+            {
+                return (1 - x) * (1 - x) * (1 - x) * (1 - x);
+            }
+            if(_TYPE == TYPE._inoutBack)
+            {
+                float c1 = 1.70158f;
+                float c2 = c1 * 1.525f;
+                
+                return (x < 0.5) ?  (Math.pow(2 * x    , 2) * ((c2 + 1) * 2 * x - c2)) / 2
+                                 :  (Math.pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+            }
+            
+            
+            return -1;
+        }
+ 
+ 
+ 
+    }
+
+    
+    #endregion
+    //// TOOL ////
+    
+    
+
+    //// RENDER ////
+    #region RENDER
+
+
+    // OBJ //
+    #region OBJ
+    
+    /*
+    
+    OBJ.INITIALIZE_HOLDER
+        OBJ obj = new OBJ(string name , int layer = 0);
+            obj.POS(v2)
+            obj.ROT(float)
+    */
+    public class OBJ
+    {
+        #region HOLDER
+        
+        public static Transform holder;
+        public static void INITIALIZE_HOLDER()
+        {
+            if(GameObject.Find("holder") != null)
+                GameObject.Deastroy(GameObject.Find("holder"));
+                
+            holder = new GameObject("holder").Transform;
+        }
+        
+        #endregion
+        
+        
+        MeshFilter mf;
+        MeshRenderer mr;
+        GameObject G;
+        
+        public OBJ(string name , int layer = 0)
+        {
+            G = new GameObject(name);
+            mf = G.AddComponent<MeshFilter>();
+            mr = G.AddComponent<MeshRenderer>();
+            mr.SharedMaterial = new Material("unlit");
+            
+            G.transform.Parent = holder;
+            G.Transform.Postion = new Vector3(0f , 0f , -layer * 1f / 10);
+        }
+        
+        
+        #region CONTROLS
+        public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
+        
+        public void POS(Vector2 pos)            { G.transform.Postion           = new Vector3(pos.x , pos.y , G.transform.Position.z ); }
+        
+        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180; ) }
+
+        public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
+
+        
+        public void mesh(Mesh mesh) { mf.sharedMesh = mesh; }
+        
+        
+        /*
+        TODO -
+            col
+            grad
+            texture
+        */
+        public void col(Color col)
+        {
+            Texture2D tex2D = new Texture2D(1 , 1);
+            tex2D.SetPixel(0, 0, col);
+            tex2D.FilterMode = Texture2D.FilterMode.Point;
+            Texture2D.Apply();
+            
+            mr.SharedMaterial.MainTexture = tex2D;
+        }
+        #endregion
+        
+        
+    }
+    
+    
+    public class OBJS
+    {
+        #region HOLDER
+        
+        public static Transform holder;
+        public static void INITIALIZE_HOLDER()
+        {
+            if(GameObject.Find("holder") != null)
+                GameObject.Deastroy(GameObject.Find("holder"));
+                
+            holder = new GameObject("holder").Transform;
+        }
+        
+        #endregion
+        
+        
+        SpriteRendere sr;
+        GameObject G;
+        
+        public OBJ(string name , int layer = 0)
+        {
+            G = new GameObject(name);
+            sr = G.AddComponent<SpriteRenderer>();
+            
+            G.transform.Parent = holder;
+            G.Transform.Postion = new Vector3(0f , 0f , -layer * 1f / 10);
+        }
+        
+        
+        #region CONTROLS
+        public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
+        
+        public void POS(Vector2 pos)            { G.transform.Postion           = new Vector3(pos.x , pos.y , G.transform.Position.z ); }
+        
+        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180; ) }
+
+        public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
+
+        
+        public void mesh(string locate ) { sr.sprite = Resources.Load<Sprite>( locate ); }
+        
+        
+
+        public void alpha(Color alpha) { sr.opacity = alpha; }
+        #endregion
+        
+        
+    }
+    
+
+    /*
+    TEXT.INITIALIZE_HOLDER
+        TEXT txt = new TEXT(string str, int layer = 0);
+            txt.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
+            txt.enable(true);
+            yield return txt.write();
+            yield return txt.typeWrite_from_rand_characters();
+            
+
+            // TO FIND A WAY TO //
+            each characters with its own TMPro.tm component
+                control animating of each characters
+            // TO FIND A WAY TO //
+    
+    
+    */
+    public class TEXT
+    {
+        
+    }
+    
+    
+    
+    
+    
+    
+    /*
+    
+    CAM cam = new CAM(MainCamera);
+        cam.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
+
+        // TO FIND A WAY TO //
+            smooth camera motion ....  by laging behind a certain amount 
+            switching between .... persp - ortho
+        // TO FIND A WAY TO //
+    
+    */
+    public class CAM
+    {
+        
+        
+    }
+    
+    
+    #endregion
+    // OBJ //
+
+
+
+    // MESH //
+    #region MESH
+    public static class MESH
+    {
+        
+    /*
+    TODO -
+        PATH ( t ) .... with variable specified stroke
+        DOTTED_PATH ( t )
+        
+        QUAD ( t )
+
+    */
+
+    }
+
+    #endregion
+    // MESH //
+    
+    
+    // DRAW //
+    #region DRAW
+    public class DRAW
+    {
+        
+        public static float dt = Time.DeltaTime;
+        public static Color col = Color.red;   
+        
+        
+        
+        public static void LINE(Vector2 a , Vector2 b , float e = 1f/50)
+        {
+            Vector2 nX = b - a,
+                    nY = new Vector2(-nX.y , nX.x).normalized;
+            
+            Debug.DrawLine(a + nY * e , b + nY * e , DRAW.col , DRAW.dt);
+            Debug.DrawLine(a - nY * e , b - nY * e , DRAW.col , DRAW.dt);
+        }
+        
+        public static void QUAD(Vector2 o ,float sx , float sy , float se = 1f / 100 , float e = 1f / 100)
+        {
+
+            Vector2[] o_corner_1D = new Vector2[4]
+            {
+                o + new Vector2(+sx * 0.5f - se, +sy * 0.5f - se),  
+                o + new Vector2(-sx * 0.5f + se, +sy * 0.5f - se),  
+                o + new Vector2(-sx * 0.5f + se, -sy * 0.5f + se),  
+                o + new Vector2(+sx * 0.5f - se, -sy * 0.5f + se),  
+            };
+            
+            
+            Vector2[] i_corner_1D = new Vector2[4]
+            {
+                o + new Vector2( +sx * 0.5f - (se + e), +sy * 0.5f - (se + e) ),  
+                o + new Vector2( -sx * 0.5f + (se + e), +sy * 0.5f - (se + e) ),  
+                o + new Vector2( -sx * 0.5f + (se + e), -sy * 0.5f + (se + e) ),  
+                o + new Vector2( +sx * 0.5f - (se + e), -sy * 0.5f + (se + e) ),  
+            };
+            
+            for(int i = 0  ; i < outer_corner_1D.Length; i += 1)
+            {
+                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (o + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+                Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+            }
+            
+            
+        }
+        
+        public static void POLYGON(Vector2 o , float r ,float offset_angle, int N = 6 , float se = 1f / 100 , float e = 1f / 100)
+        {
+            
+            Vector2[] o_corner_1D = new Vector2[N],
+                      i_corner_1D = new Vector2[N];
+            for(int i = 0 ; i < N ; i += 1)
+            {
+                 o_corner_1D[i] = Z.polar( 2 * C.PI * i * 1f/N + offset_angle ) * (r - se);
+                 i_corner_1D[i] = Z.polar( 2 * C.PI * i * 1f/N + offset_angle ) * (r - se - e);
+            }
+
+            //
+            for(int i = 0  ; i < outer_corner_1D.Length; i += 1)
+            {
+                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (o + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+                Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+            }
+            //
+            
+        }
+        
+        
+        
+        #region CHAR
+        /*
+        TODO char
+        0 - +
+        1 - x
+        */
+        public static void CHAR(Vector2 o , float s , int type = 0)
+        {
+            
+        }
+        #endregion
+        
+        
+    }
+    #endregion
+    // DRAW //
+
+
+
+
+    #endregion
+    //// RENDER ////
+    
+     
+    
 }
+
+
