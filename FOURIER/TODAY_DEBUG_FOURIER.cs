@@ -162,7 +162,7 @@ namespace SPACE_FOURIER
 
 					str += n.ToString() + " , ";
 
-					Vector2 v = mul(Cn_1D[i0], polar(n * 2 * Mathf.PI * t));
+					Vector2 v = mul(Cn_1D[i0], Z.polar(n * 2 * Mathf.PI * t));
 					//
 					arrow_1D[i0] = new float[2]
 					{
@@ -416,7 +416,7 @@ namespace SPACE_FOURIER
 
 			float dt = Z.inv_lerp( LUT[i - 1][0], LUT[i][0], t );
 
-			return lerp(LUT[i - 1][1], LUT[i][1], dt);
+			return Z.lerp(LUT[i - 1][1], LUT[i][1], dt);
 		}
 
 		static float get_t(float[][] LUT, float dist)
@@ -429,9 +429,9 @@ namespace SPACE_FOURIER
 				if (LUT[i][1] > dist)
 					break;
 
-			float dt = inv_lerp(LUT[i - 1][1], LUT[i][1], dist);
+			float dt = Z.inv_lerp(LUT[i - 1][1], LUT[i][1], dist);
 
-			return lerp(LUT[i - 1][0], LUT[i][0], dt);
+			return Z.lerp(LUT[i - 1][0], LUT[i][0], dt);
 		}
 		// ad // 
 		#endregion
@@ -485,7 +485,7 @@ namespace SPACE_FOURIER
         
         public static float mag(Vector2 v)
         {
-            return Matf.Sqrt(v.x * v.x + v.y * v.y);
+            return Mathf.Sqrt(v.x * v.x + v.y * v.y);
         }
         
     }
@@ -499,23 +499,29 @@ namespace SPACE_FOURIER
     
         public static int round(float x)
         {
-            int frac = x - (int)x;
+            float frac = x - (int)x;
             if(frac >= 0)
                 if(frac >= 0.5f)
                     return (int)x + 1;
                 else
                     return (int)x;
             else
-                
-            
-        }
+				if (frac >= 0.5f)
+					return (int)x + 1;
+				else
+					return (int)x;
+
+
+		}
         public static int sign(float x)
         {
-            if(Mathf.abs(x) < 1f / 1000000 )
+            if(Mathf.Abs(x) < 1f / 1000000 )
                 return 0;
             
             if( x > 0) return +1;
-            if( X < 0) return -1;
+            if( x < 0) return -1;
+
+			return 0;
         }
     
         
@@ -532,7 +538,7 @@ namespace SPACE_FOURIER
             }
         */
         
-        public static int C.frames = 30;
+        public static int frames = 30;
         public static int i = 0;
         public static float t { get { return C.i * 1f / (C.frames - 1); } }
         
@@ -575,19 +581,19 @@ namespace SPACE_FOURIER
             
             if(_TYPE == TYPE._inQuad)
             {
-                return x * x * x * x;
+                return t * t * t * t;
             }
             if(_TYPE == TYPE._outQuad)
             {
-                return (1 - x) * (1 - x) * (1 - x) * (1 - x);
+                return (1 - t) * (1 - t) * (1 - t) * (1 - t);
             }
             if(_TYPE == TYPE._inoutBack)
             {
                 float c1 = 1.70158f;
                 float c2 = c1 * 1.525f;
                 
-                return (x < 0.5) ?  (Math.pow(2 * x    , 2) * ((c2 + 1) * 2 * x - c2)) / 2
-                                 :  (Math.pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+                return (t < 0.5) ?  (Mathf.Pow(2 * t    , 2) * ((c2 + 1) * 2 * t - c2)) / 2
+                                 :  (Mathf.Pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
             }
             
             
@@ -626,9 +632,9 @@ namespace SPACE_FOURIER
         public static void INITIALIZE_HOLDER()
         {
             if(GameObject.Find("holder") != null)
-                GameObject.Deastroy(GameObject.Find("holder"));
+                GameObject.Destroy(GameObject.Find("holder"));
                 
-            holder = new GameObject("holder").Transform;
+            holder = new GameObject("holder").transform;
         }
         
         #endregion
@@ -643,19 +649,19 @@ namespace SPACE_FOURIER
             G = new GameObject(name);
             mf = G.AddComponent<MeshFilter>();
             mr = G.AddComponent<MeshRenderer>();
-            mr.SharedMaterial = new Material("unlit");
+            mr.sharedMaterial = new Material("unlit");
             
-            G.transform.Parent = holder;
-            G.Transform.Postion = new Vector3(0f , 0f , -layer * 1f / 10);
+            G.transform.parent = holder;
+            G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
         }
         
         
         #region CONTROLS
         public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
         
-        public void POS(Vector2 pos)            { G.transform.Postion           = new Vector3(pos.x , pos.y , G.transform.Position.z ); }
+        public void POS(Vector2 pos)            { G.transform.position           = new Vector3(pos.x , pos.y , G.transform.position.z ); }
         
-        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180; ) }
+        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180 ); }
 
         public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
 
@@ -673,10 +679,10 @@ namespace SPACE_FOURIER
         {
             Texture2D tex2D = new Texture2D(1 , 1);
             tex2D.SetPixel(0, 0, col);
-            tex2D.FilterMode = Texture2D.FilterMode.Point;
-            Texture2D.Apply();
+            tex2D.filterMode = FilterMode.Point;
+            tex2D.Apply();
             
-            mr.SharedMaterial.MainTexture = tex2D;
+            mr.sharedMaterial.mainTexture = tex2D;
         }
         #endregion
         
@@ -692,33 +698,33 @@ namespace SPACE_FOURIER
         public static void INITIALIZE_HOLDER()
         {
             if(GameObject.Find("holder") != null)
-                GameObject.Deastroy(GameObject.Find("holder"));
+                GameObject.Destroy(GameObject.Find("holder"));
                 
-            holder = new GameObject("holder").Transform;
+            holder = new GameObject("holder").transform;
         }
         
         #endregion
         
         
-        SpriteRendere sr;
+        SpriteRenderer sr;
         GameObject G;
         
-        public OBJ(string name , int layer = 0)
+        public OBJS(string name , int layer = 0)
         {
             G = new GameObject(name);
             sr = G.AddComponent<SpriteRenderer>();
             
-            G.transform.Parent = holder;
-            G.Transform.Postion = new Vector3(0f , 0f , -layer * 1f / 10);
+            G.transform.parent = holder;
+            G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
         }
         
         
         #region CONTROLS
         public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
         
-        public void POS(Vector2 pos)            { G.transform.Postion           = new Vector3(pos.x , pos.y , G.transform.Position.z ); }
+        public void POS(Vector2 pos)            { G.transform.position          = new Vector3(pos.x , pos.y , G.transform.position.z ); }
         
-        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f , 0f , angle / C.PI * 180; ) }
+        public void ROT(float angle)            { G.transform.localEulerAngles = new Vector3(0f, 0f, angle / C.PI * 180); }
 
         public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
 
@@ -727,7 +733,7 @@ namespace SPACE_FOURIER
         
         
 
-        public void alpha(Color alpha) { sr.opacity = alpha; }
+        public void alpha(float alpha) { sr.color = new Color(0f, 0f, 0f, alpha); }
         #endregion
         
         
@@ -808,7 +814,7 @@ namespace SPACE_FOURIER
     public class DRAW
     {
         
-        public static float dt = Time.DeltaTime;
+        public static float dt = Time.deltaTime;
         public static Color col = Color.red;   
         
         
@@ -842,9 +848,9 @@ namespace SPACE_FOURIER
                 o + new Vector2( +sx * 0.5f - (se + e), -sy * 0.5f + (se + e) ),  
             };
             
-            for(int i = 0  ; i < outer_corner_1D.Length; i += 1)
+            for(int i = 0  ; i < o_corner_1D.Length; i += 1)
             {
-                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (o + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
                 Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
             }
             
@@ -863,9 +869,9 @@ namespace SPACE_FOURIER
             }
 
             //
-            for(int i = 0  ; i < outer_corner_1D.Length; i += 1)
+            for(int i = 0  ; i < o_corner_1D.Length; i += 1)
             {
-                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (o + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
+                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
                 Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
             }
             //
@@ -900,5 +906,4 @@ namespace SPACE_FOURIER
      
     
 }
-
 
