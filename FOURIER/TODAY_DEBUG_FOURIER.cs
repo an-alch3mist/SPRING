@@ -52,11 +52,11 @@ namespace SPACE_FOURIER
 			#endregion
 
 
-			BEZIER_PATH _bezier_path = new BEZIER_PATH();
-			_bezier_path.P = P;
+			PATH _path = new PATH();
+			_path.P = P;
 
 			FOURIER _fourier = new FOURIER();
-			_fourier._bezier_path = _bezier_path;
+			_fourier._bezier_path = _path;
 			_fourier.INITIALIZE(Cn_count : 4);
 			
 
@@ -66,7 +66,7 @@ namespace SPACE_FOURIER
 			{
 
 				//
-				Tr_pos_0.position = _bezier_path.pos(this.t);
+				Tr_pos_0.position = _path.pos(this.t);
 
 
 				_fourier.update__arrow_1D(this.t);
@@ -88,9 +88,12 @@ namespace SPACE_FOURIER
 
 				yield return null;
 			}
+            
+            
 			
 
 			yield return null;
+            
 		}
 
 
@@ -108,7 +111,7 @@ namespace SPACE_FOURIER
 		{
 
 			// in //
-			public BEZIER_PATH _bezier_path;
+			public PATH _bezier_path;
 			
 			
 			
@@ -260,8 +263,7 @@ namespace SPACE_FOURIER
 	out -   get_const_spaced_points_0(N) 
 	        get_const_spaced_points_1(N , N_e)         
 	*/
-
-	public class BEZIER_PATH
+	public class PATH
 	{
 		/*
 		in -    L<v2> P
@@ -439,192 +441,210 @@ namespace SPACE_FOURIER
 	}
 
 
-    #endregion
-    //// STUFF ////
+
+	#endregion
+	//// STUFF ////
 
 
 
 
-    //// TOOL ////
-    #region TOOL
-    public static class Z
-    {
-        public static Vector3 lerp(Vector3 a , Vector3 b , float t)
-        {
-            Vector3 n = b - a;
-            return a + n * t;
-        }
-        
-        public static float lerp(float a , float b , float t)
-        {
-            float n = b - a;
-            return a + n * t;
-        }
-        
-        public static float dot(Vector3 a , Vector3 b)
-        {
-            return a.x * b.x + a.y * b.y + a.z * b.z;
-        }
-        
-        public static Vector2 polar(float angle)
-        {
-            return new Vector2()
-            {
-                x = Mathf.Cos(angle),
-                y = Mathf.Sin(angle)
-            };
-        }
-        
-        
-        
-        public static float inv_lerp( float a,  float b , float v)
+	//// TOOL ////
+	#region TOOL
+
+	#region Z
+	public static class Z
+	{
+		#region lerp
+		public static Vector3 lerp(Vector3 a, Vector3 b, float t)
+		{
+			Vector3 n = b - a;
+			return a + n * t;
+		}
+
+		public static float lerp(float a, float b, float t)
+		{
+			float n = b - a;
+			return a + n * t;
+		}
+		#endregion
+
+		#region dot
+		public static float dot(Vector3 a, Vector3 b)
+		{
+			return a.x * b.x + a.y * b.y + a.z * b.z;
+		}
+		#endregion
+
+		#region polar
+		public static Vector2 polar(float angle)
+		{
+			return new Vector2()
+			{
+				x = Mathf.Cos(angle),
+				y = Mathf.Sin(angle)
+			};
+		}
+		#endregion
+
+
+
+		#region inv_lerp
+		public static float inv_lerp(float a, float b, float v)
 		{
 			return (v - a) / (b - a);
 		}
-        
-        
-        public static float mag(Vector2 v)
-        {
-            return Mathf.Sqrt(v.x * v.x + v.y * v.y);
-        }
-        
-    }
-    
-    public static class C
-    {
-        public static float PI = Mathf.PI;
-        public static Vector2 zero = Vector2.zero;
+		#endregion
 
-        #region round(x) , sign(x)
-    
-        public static int round(float x)
-        {
-            float frac = x - (int)x;
-            if(frac >= 0)
-                if(frac >= 0.5f)
-                    return (int)x + 1;
-                else
-                    return (int)x;
-            else
+
+		#region mag
+		public static float mag(Vector2 v)
+		{
+			return Mathf.Sqrt(v.x * v.x + v.y * v.y);
+		}
+		#endregion
+
+	} 
+	#endregion
+
+	#region C
+	public static class C
+	{
+		public static float PI = Mathf.PI;
+		public static Vector2 zero = Vector2.zero;
+
+		#region round(x) , sign(x)
+
+		public static int round(float x)
+		{
+			float frac = x - (int)x;
+			if (frac >= 0)
 				if (frac >= 0.5f)
 					return (int)x + 1;
 				else
 					return (int)x;
+			else
+				if (frac <= 0.5f)
+				return (int)x - 1;
+			else
+				return (int)x;
 
 
 		}
-        public static int sign(float x)
-        {
-            if(Mathf.Abs(x) < 1f / 1000000 )
-                return 0;
-            
-            if( x > 0) return +1;
-            if( x < 0) return -1;
+		public static int sign(float x)
+		{
+			if (Mathf.Abs(x) < 1f / 1000000)
+				return 0;
+
+			if (x > 0) return +1;
+			if (x < 0) return -1;
 
 			return 0;
-        }
-    
-        
-        
-        #endregion
-        
-        
-        /*
-        format -
+		}
+
+
+
+		#endregion
+
+
+		/*
+        animate -
             C.frames = 30
             for(C.i = 0 ; C.i < C.frames ; C.i += 1)
             {
                 // do somthng with C.t;       
             }
         */
-        
-        public static int frames = 30;
-        public static int i = 0;
-        public static float t { get { return C.i * 1f / (C.frames - 1); } }
-        
-        
-        
-        
-    }
-    
-    public class EASE
-    {
-        public enum TYPE
-        {
-            _lerp,
-            _smooth,
-            
-            _inQuad,
-            _outQuad,
-            
-            _inoutBack,
-            
-        }
- 
- 
-        public static TYPE _TYPE ; 
-        public static float f(float t)
-        {
-            if(t >= 1f) return 1f;
-            if(t <= 0f) return 0f;
-                
 
-            if(_TYPE == TYPE._lerp)
-            {
-                return t;
-            }
-            if(_TYPE == TYPE._smooth)
-            {
-                float Y = Mathf.Cos( t * C.PI );
-                return (-Y + 1f) / 2f;    
-            }
-            
-            if(_TYPE == TYPE._inQuad)
-            {
-                return t * t * t * t;
-            }
-            if(_TYPE == TYPE._outQuad)
-            {
-                return (1 - t) * (1 - t) * (1 - t) * (1 - t);
-            }
-            if(_TYPE == TYPE._inoutBack)
-            {
-                float c1 = 1.70158f;
-                float c2 = c1 * 1.525f;
-                
-                return (t < 0.5) ?  (Mathf.Pow(2 * t    , 2) * ((c2 + 1) * 2 * t - c2)) / 2
-                                 :  (Mathf.Pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
-            }
-            
-            
-            return -1;
-        }
- 
- 
- 
-    }
-
-    
-    #endregion
-    //// TOOL ////
-    
-    
-
-    //// RENDER ////
-    #region RENDER
+		public static int frames = 30;
+		public static int i = 0;
+		public static float t { get { return C.i * 1f / (C.frames - 1); } }
 
 
-    // OBJ //
-    #region OBJ
-    
-    /*
+
+
+	} 
+	#endregion
+
+	#region EASE
+	public class EASE
+	{
+		public enum TYPE
+		{
+			_lerp,
+			_smooth,
+
+			_inQuad,
+			_outQuad,
+
+			_inoutBack,
+
+		}
+
+
+		public static TYPE _TYPE;
+		public static float f(float t)
+		{
+			if (t >= 1f) return 1f;
+			if (t <= 0f) return 0f;
+
+
+			if (_TYPE == TYPE._lerp)
+			{
+				return t;
+			}
+			if (_TYPE == TYPE._smooth)
+			{
+				float Y = Mathf.Cos(t * C.PI);
+				return (-Y + 1f) / 2f;
+			}
+
+			if (_TYPE == TYPE._inQuad)
+			{
+				return t * t * t * t;
+			}
+			if (_TYPE == TYPE._outQuad)
+			{
+				return (1 - t) * (1 - t) * (1 - t) * (1 - t);
+			}
+			if (_TYPE == TYPE._inoutBack)
+			{
+				float c1 = 1.70158f;
+				float c2 = c1 * 1.525f;
+
+				return (t < 0.5) ? (Mathf.Pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
+								 : (Mathf.Pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+			}
+
+
+			return -1;
+		}
+
+
+
+	} 
+	#endregion
+
+
+	#endregion
+	//// TOOL ////
+
+
+
+	//// RENDER ////
+	#region RENDER
+
+
+	// OBJ //
+	#region OBJ
+
+	/*
     
     OBJ.INITIALIZE_HOLDER
         OBJ obj = new OBJ(string name , int layer = 0);
             obj.POS(v2)
             obj.ROT(float)
     */
-    public class OBJ
+	public class OBJ
     {
         #region HOLDER
         
@@ -697,10 +717,10 @@ namespace SPACE_FOURIER
         public static Transform holder;
         public static void INITIALIZE_HOLDER()
         {
-            if(GameObject.Find("holder") != null)
-                GameObject.Destroy(GameObject.Find("holder"));
+            if(GameObject.Find("holderS") != null)
+                GameObject.Destroy(GameObject.Find("holderS"));
                 
-            holder = new GameObject("holder").transform;
+            holder = new GameObject("holderS").transform;
         }
         
         #endregion
@@ -714,7 +734,7 @@ namespace SPACE_FOURIER
             G = new GameObject(name);
             sr = G.AddComponent<SpriteRenderer>();
             
-            G.transform.parent = holder;
+            G.transform.parent = OBJS.holder;
             G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
         }
         
@@ -815,78 +835,82 @@ namespace SPACE_FOURIER
     {
         
         public static float dt = Time.deltaTime;
-        public static Color col = Color.red;   
-        
-        
-        
-        public static void LINE(Vector2 a , Vector2 b , float e = 1f/50)
-        {
-            Vector2 nX = b - a,
-                    nY = new Vector2(-nX.y , nX.x).normalized;
-            
-            Debug.DrawLine(a + nY * e , b + nY * e , DRAW.col , DRAW.dt);
-            Debug.DrawLine(a - nY * e , b - nY * e , DRAW.col , DRAW.dt);
-        }
-        
-        public static void QUAD(Vector2 o ,float sx , float sy , float se = 1f / 100 , float e = 1f / 100)
-        {
+        public static Color col = Color.red;
 
-            Vector2[] o_corner_1D = new Vector2[4]
-            {
-                o + new Vector2(+sx * 0.5f - se, +sy * 0.5f - se),  
-                o + new Vector2(-sx * 0.5f + se, +sy * 0.5f - se),  
-                o + new Vector2(-sx * 0.5f + se, -sy * 0.5f + se),  
-                o + new Vector2(+sx * 0.5f - se, -sy * 0.5f + se),  
-            };
-            
-            
-            Vector2[] i_corner_1D = new Vector2[4]
-            {
-                o + new Vector2( +sx * 0.5f - (se + e), +sy * 0.5f - (se + e) ),  
-                o + new Vector2( -sx * 0.5f + (se + e), +sy * 0.5f - (se + e) ),  
-                o + new Vector2( -sx * 0.5f + (se + e), -sy * 0.5f + (se + e) ),  
-                o + new Vector2( +sx * 0.5f - (se + e), -sy * 0.5f + (se + e) ),  
-            };
-            
-            for(int i = 0  ; i < o_corner_1D.Length; i += 1)
-            {
-                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
-                Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
-            }
-            
-            
-        }
-        
-        public static void POLYGON(Vector2 o , float r ,float offset_angle, int N = 6 , float se = 1f / 100 , float e = 1f / 100)
-        {
-            
-            Vector2[] o_corner_1D = new Vector2[N],
-                      i_corner_1D = new Vector2[N];
-            for(int i = 0 ; i < N ; i += 1)
-            {
-                 o_corner_1D[i] = Z.polar( 2 * C.PI * i * 1f/N + offset_angle ) * (r - se);
-                 i_corner_1D[i] = Z.polar( 2 * C.PI * i * 1f/N + offset_angle ) * (r - se - e);
-            }
 
-            //
-            for(int i = 0  ; i < o_corner_1D.Length; i += 1)
-            {
-                Debug.DrawLine(o_corner_1D[i] , o_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
-                Debug.DrawLine(i_corner_1D[i] , i_corner_1D[ (i + 1) % o_corner_1D.Length ] , DRAW.col , DRAW.dt);
-            }
-            //
-            
-        }
-        
-        
-        
-        #region CHAR
-        /*
+
+		#region LINE
+		public static void LINE(Vector2 a, Vector2 b, float e = 1f / 50)
+		{
+			Vector2 nX = b - a,
+					nY = new Vector2(-nX.y, nX.x).normalized;
+
+			Debug.DrawLine(a + nY * e, b + nY * e, DRAW.col, DRAW.dt);
+			Debug.DrawLine(a - nY * e, b - nY * e, DRAW.col, DRAW.dt);
+		}
+		#endregion
+
+		#region QUAD
+		public static void QUAD(Vector2 o, float sx, float sy, float se = 1f / 100, float e = 1f / 100)
+		{
+
+			Vector2[] o_corner_1D = new Vector2[4]
+			{
+				o + new Vector2(+sx * 0.5f - se, +sy * 0.5f - se),
+				o + new Vector2(-sx * 0.5f + se, +sy * 0.5f - se),
+				o + new Vector2(-sx * 0.5f + se, -sy * 0.5f + se),
+				o + new Vector2(+sx * 0.5f - se, -sy * 0.5f + se),
+			};
+
+
+			Vector2[] i_corner_1D = new Vector2[4]
+			{
+				o + new Vector2( +sx * 0.5f - (se + e), +sy * 0.5f - (se + e) ),
+				o + new Vector2( -sx * 0.5f + (se + e), +sy * 0.5f - (se + e) ),
+				o + new Vector2( -sx * 0.5f + (se + e), -sy * 0.5f + (se + e) ),
+				o + new Vector2( +sx * 0.5f - (se + e), -sy * 0.5f + (se + e) ),
+			};
+
+			for (int i = 0; i < o_corner_1D.Length; i += 1)
+			{
+				Debug.DrawLine(o_corner_1D[i], o_corner_1D[(i + 1) % o_corner_1D.Length], DRAW.col, DRAW.dt);
+				Debug.DrawLine(i_corner_1D[i], i_corner_1D[(i + 1) % o_corner_1D.Length], DRAW.col, DRAW.dt);
+			}
+
+		}
+		#endregion
+
+		#region POLYGON
+		public static void POLYGON(Vector2 o, float r, float offset_angle, int N = 6, float se = 1f / 100, float e = 1f / 100)
+		{
+
+			Vector2[] o_corner_1D = new Vector2[N],
+					  i_corner_1D = new Vector2[N];
+			for (int i = 0; i < N; i += 1)
+			{
+				o_corner_1D[i] = Z.polar(2 * C.PI * i * 1f / N + offset_angle) * (r - se);
+				i_corner_1D[i] = Z.polar(2 * C.PI * i * 1f / N + offset_angle) * (r - se - e);
+			}
+
+			//
+			for (int i = 0; i < o_corner_1D.Length; i += 1)
+			{
+				Debug.DrawLine(o_corner_1D[i], o_corner_1D[(i + 1) % o_corner_1D.Length], DRAW.col, DRAW.dt);
+				Debug.DrawLine(i_corner_1D[i], i_corner_1D[(i + 1) % o_corner_1D.Length], DRAW.col, DRAW.dt);
+			}
+			//
+
+		} 
+		#endregion
+
+
+		#region CHAR
+		/*
         TODO char
         0 - +
         1 - x
         */
-        public static void CHAR(Vector2 o , float s , int type = 0)
+		public static void CHAR(Vector2 o , float s , int type = 0)
         {
             
         }
