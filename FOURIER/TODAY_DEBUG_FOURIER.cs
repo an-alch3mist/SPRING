@@ -58,12 +58,20 @@ namespace SPACE_FOURIER
 			FOURIER _fourier = new FOURIER();
 			_fourier._bezier_path = _path;
 			_fourier.INITIALIZE(Cn_count : 4);
-			
 
+
+
+			OBJ.INITIALIZE_HOLDER();
+			//
+			OBJ obj = new OBJ("obj_path", 0);
+			obj.mesh(MESH.mesh_path(P, 1f / 50));
 
 
 			while(true)
 			{
+
+
+
 
 				//
 				Tr_pos_0.position = _path.pos(this.t);
@@ -88,12 +96,9 @@ namespace SPACE_FOURIER
 
 				yield return null;
 			}
-            
-            
 			
 
 			yield return null;
-            
 		}
 
 
@@ -669,7 +674,7 @@ namespace SPACE_FOURIER
             G = new GameObject(name);
             mf = G.AddComponent<MeshFilter>();
             mr = G.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = new Material("unlit");
+			mr.sharedMaterial = new Material(Shader.Find("unlit"));
             
             G.transform.parent = holder;
             G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
@@ -813,15 +818,92 @@ namespace SPACE_FOURIER
     #region MESH
     public static class MESH
     {
-        
-    /*
-    TODO -
-        PATH ( t ) .... with variable specified stroke
-        DOTTED_PATH ( t )
-        
-        QUAD ( t )
 
-    */
+		/*
+		TODO -
+			PATH ( t ) .... with variable specified stroke
+			DOTTED_PATH ( t )
+        
+			QUAD ( t )
+		*/
+
+		public static Mesh mesh_path(List<Vector2> P , float e =1f/100)
+		{
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+
+
+			int N = P.Count - 1;
+
+			Vector2[] V = new Vector2[N + 1];
+			#region V
+			V[0] = (P[1] - P[0]).normalized * e;
+			//
+			for (int i = 1; i <= P.Count - 2; i += 1)
+			{
+				Vector2 prev = (P[i - 1] - P[i]).normalized,
+						next = (P[i + 1] - P[i]).normalized;
+
+				Vector2 sum = (next - prev).normalized;
+
+				V[i] = sum * e / Z.dot(-prev, sum); // -prev
+
+				/*
+				Debug.DrawLine(P[i], P[i] + prev, Color.green, 10f);
+				Debug.DrawLine(P[i], P[i] + next, Color.gray, 10f);
+				Debug.DrawLine(P[i], P[i] + sum, Color.cyan, 10f);
+				Debug.DrawLine(P[i], P[i] + V[i], Color.magenta, 10f);
+				*/
+			}
+			//
+			V[N] = (P[P.Count - 1] - P[P.Count - 2]).normalized * e;
+
+
+
+
+			for (int i = 0; i < V.Length; i += 1)
+			{ V[i] = new Vector2(-V[i].y, V[i].x); }
+			#endregion
+
+
+			#region verts , tris
+			for (int x = 0; x <= P.Count - 1; x += 1)
+			{
+				/*
+				Debug.DrawLine(P[x], P[x] - V[x], Color.white, 10f);
+				Debug.DrawLine(P[x], P[x] + V[x], Color.red, 10f);
+				*/
+
+				verts.Add(P[x] - V[x]);
+				verts.Add(P[x] + V[x]);
+
+				if (x == 0) continue;
+
+				int index = verts.Count - 1;
+				tris.Add(index - 3);
+				tris.Add(index - 2);
+				tris.Add(index);
+
+				tris.Add(index - 3);
+				tris.Add(index);
+				tris.Add(index - 1);
+			} 
+			#endregion
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+			};
+			mesh.RecalculateNormals(); 
+			#endregion
+
+			return mesh;
+		}
+
+
 
     }
 
