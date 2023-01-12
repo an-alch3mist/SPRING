@@ -527,6 +527,7 @@ namespace SPACE_FOURIER
 	{
 		public static float PI = Mathf.PI;
 		public static Vector2 zero = Vector2.zero;
+		public static float de = 1f/1000000
 
 		#region round(x) , sign(x)
 
@@ -827,6 +828,11 @@ namespace SPACE_FOURIER
 
     // MESH //
     #region MESH
+    /*
+    process points .... t
+    generate mesh
+    */
+    
     public static class MESH
     {
 
@@ -834,14 +840,41 @@ namespace SPACE_FOURIER
 		TODO -
 			PATH ( t ) .... with variable specified stroke
 			DOTTED_PATH ( t )
-        
-			QUAD ( t )
 		*/
 
-		public static Mesh mesh_path(List<Vector2> P , float e =1f/100)
+
+		public static Mesh mesh_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
+		    
+		    List<Vector2> P = new L<Vector2>();
+		    
+		    #region process old_P .... to .... P
+		    //
+		    if(t >= 1f) t = 1f - C.de;
+		    if(t <= 0f) return new Mesh(); 
+		    
+            int old_N = old_P.Count - 1;		    
+		    
+		    float i_F = old_N * t,
+		          i_I = (int)i_F;
+		    
+		    
+		    for(int i = 0 ; i <= i_I ; i += 1)
+		    {
+		        P.Add(old_P[i]);
+		    }
+		    if((i_F - i_I) > C.de )
+		    {
+		        float dt = i_F - i_I;
+                P.AddZ.lerp( P[i_I] , P[i_I + 1] , dt );
+		    }
+		    //
+            #endregion
+		    
+		    
 			List<Vector3> verts = new List<Vector3>();
 			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
 
 
 			int N = P.Count - 1;
@@ -888,18 +921,219 @@ namespace SPACE_FOURIER
 				verts.Add(P[x] - V[x]);
 				verts.Add(P[x] + V[x]);
 
+				uvs.Add(new Vector2(0f , 0f));
+				uvs.Add(new Vector2(0f , 0f));
+				
+				
 				if (x == 0) continue;
 
 				int index = verts.Count - 1;
 				tris.Add(index - 3);
 				tris.Add(index - 2);
-				tris.Add(index);
+				tris.Add(index - 0);
 
 				tris.Add(index - 3);
-				tris.Add(index);
+				tris.Add(index - 0);
 				tris.Add(index - 1);
+				
+				
+				
 			} 
 			#endregion
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+				uv = uvs.ToArray(),
+			};
+			mesh.RecalculateNormals(); 
+			#endregion
+
+			return mesh;
+		}
+		
+		
+		
+		
+		public static Mesh mesh_dotted_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
+		{
+		    
+		    List<Vector2> P = new L<Vector2>();
+		    
+		    #region process old_P .... to .... P
+		    //
+		    if(t >= 1f) t = 1f - C.de;
+		    if(t <= 0f) return new Mesh(); 
+		    
+            int old_N = (old_P.Count / 2);		    
+		    
+		    float i_F = old_N * t,
+		          i_I = (int)i_F;
+		    
+		    
+		    for(int i = 0 ; i < i_I ; i += 1)
+		    {
+		        P.Add(old_P[i * 2 + 0]);
+		        P.Add(old_P[i * 2 + 1]);
+		    }
+		    
+
+		    if((i_F - i_I) > C.de )
+		    {
+		        float dt = i_F - i_I;
+		        P.Add(old_P[i_I * 2]);
+		        P.Add( Z.lerp(old_P[i_I * 2] , old_P[i_I * 2 + 1] , dt) );
+		    }
+		    //
+            #endregion
+		    
+		    
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
+
+
+			int N = P.Count - 1;
+
+			Vector2[] V = new Vector2[N + 1];
+			
+			
+			#region V
+			//
+			for (int i = 0; i <= P.Count - 2; i += 2)
+			{
+				Vector2 next = (P[i + 1] - P[i]).normalized;
+
+				V[i + 0] = sum * e; 
+				V[i + 1] = sum * e; 
+			}
+			//
+
+			for (int i = 0; i < V.Length; i += 1)
+			{ V[i] = new Vector2(-V[i].y, V[i].x); }
+			
+			#endregion
+
+
+
+			#region verts , tris
+			for (int x = 0; x <= P.Count - 2; x += 2)
+			{
+			    
+				verts.Add(P[x + 0] - V[x + 0]);
+				verts.Add(P[x + 0] + V[x + 0]);
+				verts.Add(P[x + 1] - V[x + 1]);
+				verts.Add(P[x + 1] + V[x + 1]);
+				
+				
+				uvs.Add(new Vector2(0f , 0f));
+				uvs.Add(new Vector2(0f , 0f));
+				uvs.Add(new Vector2(0f , 0f));
+				uvs.Add(new Vector2(0f , 0f));
+				
+				
+
+				int index = verts.Count - 1;
+				tris.Add(index - 3);
+				tris.Add(index - 2);
+				tris.Add(index - 0);
+
+
+				tris.Add(index - 3);
+				tris.Add(index - 0);
+				tris.Add(index - 1);
+				
+				
+				
+			} 
+			#endregion
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+				uv = uvs.ToArray()
+			};
+			mesh.RecalculateNormals(); 
+			#endregion
+
+			return mesh;
+		}
+		
+		
+		
+
+
+        /*
+        TODO wave effect after drawing point
+        */
+        public static Mesh mesh_disc(float r , float dr , int N = 16 , float t = 0f)
+		{
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
+
+            
+            /*
+            dr
+            r
+            r
+            r
+            o
+            */
+            
+            float[] r_1D = new float[3]
+            {
+                0f,
+                Z.lerp( 0f , r , t),
+                Z.lerp( r , dr , t)
+            }
+
+
+			#region verts 
+            
+            for(int y = 0 ; y <= 2 ; y += 1)
+            {
+                for(int x = 0 ; x <= N ; x += 1)
+                {
+                    verts.Add(Z.polar(2 * C.PI * x * 1f / N) * r_1D[y]);
+                    
+                    uvs.Add(new Vector2(x * 1f/N , y * 1f / 2));
+                }
+            }
+                        
+			#endregion
+
+            #region tris
+            /*
+            
+            2 * (N + 1) .... 0, 1 , 2, 3, 4, ..... N 
+            1 * (N + 1) .... 0, 1 , 2, 3, 4, ..... N 
+            0 +         .... 0, 1 , 2, 3, 4, ..... N 
+            */
+            
+            
+            for(int y = 0 ; y <= 1 ; y += 1)
+            {
+                for(int x = 0 x <= N - 1 ; x += 1)
+                {
+                    tris.Add((x + 0) + (y + 0) * (N + 1));
+                    tris.Add((x + 1) + (y + 0) * (N + 1));
+                    tris.Add((x + 1) + (y + 1) * (N + 1));
+    
+                    tris.Add((x + 0) + (y + 0) * (N + 1));
+                    tris.Add((x + 1) + (y + 1) * (N + 1));
+                    tris.Add((x + 0) + (y + 1) * (N + 1));
+                }
+            }
+            
+            #endregion
+            
 
 
 			#region mesh
@@ -913,7 +1147,103 @@ namespace SPACE_FOURIER
 
 			return mesh;
 		}
+		
+		
+		
+		/*
+        unit-quad oriented baased on transform
+        */
+        public static Mesh mesh_quad()
+		{
+			List<Vector3> verts = new List<Vector3>()
+			{
+			    new Vector2( -0.5f , -0.5f ),
+			    new Vector2( -0.5f , +0.5f ),
+			    new Vector2( +0.5f , +0.5f ),
+			    new Vector2( +0.5f , +0.5f ),
+			};
+			
+			
+			List<int> tris = new List<int>()
+			{
+			    0 , 1, 2,
+			    0 , 2, 3,
+			    
+			}
+			
+			List<Vector2> uvs = new List<Vector2>()
+			{
+	            new Vector2(0f , 0f),  
+	            new Vector2(0f , 1f),  
+	            new Vector2(1f , 1f),  
+	            new Vector2(1f , 0f),  
+			};
+            
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices    = verts.ToArray(),
+				triangles   = tris.ToArray(),
+				uv          = uvs.ToArray(),
+			};
+			mesh.RecalculateNormals(); 
+			#endregion
 
+			return mesh;
+		}
+		
+		
+		/*
+        unit-quad oriented baased on transform
+        */
+        public static Mesh mesh_poly(float r , float offset_angle = 0f , int N = 16)
+		{
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
+
+            
+			#region verts 
+            verts.Add(new Vector2(0f , 0f));
+			uvs.Add(new Vector2(0f , 0f));
+            
+            
+            for(int x = 0 ; x < N ; x += 1)
+            {
+                verts.Add(Z.polar( 2 * C.PI * x * 1f / N + offset_angle ) * r );
+                uvs.Add(new Vector2(0f , 0f));
+            }
+            
+			#endregion
+
+            #region tris
+            for(int i = 1 ; i <= N - 1; i += 1 )
+            {
+                tris.Add(0);
+                tris.Add(i + 1)
+                tris.Add(i);
+            }
+            
+            tris.Add(0);
+            tris.Add(1);
+            tris.Add(N);
+            
+            #endregion
+            
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+				uv = uvs.ToArray(),
+			};
+			mesh.RecalculateNormals(); 
+			#endregion
+
+			return mesh;
+		}
 
 
     }
