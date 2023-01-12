@@ -54,6 +54,7 @@ namespace SPACE_FOURIER
 
 			PATH _path = new PATH();
 			_path.P = P;
+			_path.INTIALIZE_LUT();
 
 			FOURIER _fourier = new FOURIER();
 			_fourier._bezier_path = _path;
@@ -61,10 +62,20 @@ namespace SPACE_FOURIER
 
 
 
+
+
+
+
+
 			OBJ.INITIALIZE_HOLDER();
 			//
 			OBJ obj = new OBJ("obj_path", 0);
-			obj.mesh(MESH.mesh_path(P, 1f / 50));
+			obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50));
+
+
+
+
+
 
 
 			while(true)
@@ -254,6 +265,8 @@ namespace SPACE_FOURIER
 
 
 
+
+
     //// STUFF ////
     #region STUFF
     
@@ -343,7 +356,7 @@ namespace SPACE_FOURIER
 			float sum = 0f;
 			LUT[0] = new float[2] { 0f, sum };
 			//
-			for (int i = 0; i <= N; i += 1)
+			for (int i = 0; i < N; i += 1)
 			{
 				float t_prev = (i - 1) * 1f / N;
 				float t_curr = i * 1f / N;
