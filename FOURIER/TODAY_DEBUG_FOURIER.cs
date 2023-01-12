@@ -254,8 +254,6 @@ namespace SPACE_FOURIER
 
 
 
-
-
     //// STUFF ////
     #region STUFF
     
