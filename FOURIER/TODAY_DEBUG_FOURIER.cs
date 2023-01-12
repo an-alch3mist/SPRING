@@ -70,7 +70,7 @@ namespace SPACE_FOURIER
 			OBJ.INITIALIZE_HOLDER();
 			//
 			OBJ obj = new OBJ("obj_path", 0);
-			obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50));
+			
 
 
 
@@ -81,7 +81,7 @@ namespace SPACE_FOURIER
 			while(true)
 			{
 
-
+				obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
 
 
 				//
@@ -158,7 +158,6 @@ namespace SPACE_FOURIER
 			/*
 			out -
 				L < pos , angle , scale >
-
 			*/
 			public float[][] arrow_1D;
 			public void update__arrow_1D(float t)
@@ -274,7 +273,6 @@ namespace SPACE_FOURIER
     /*
 	in -    bezier_path.P 
 	out -   bezier_path.pos(t) 
-
 	in -    bezier_path.initialize_LUT() 
 	out -   get_const_spaced_points_0(N) 
 	        get_const_spaced_points_1(N , N_e)         
@@ -527,7 +525,7 @@ namespace SPACE_FOURIER
 	{
 		public static float PI = Mathf.PI;
 		public static Vector2 zero = Vector2.zero;
-		public static float de = 1f/1000000
+		public static float de = 1f / 1000000;
 
 		#region round(x) , sign(x)
 
@@ -785,7 +783,6 @@ namespace SPACE_FOURIER
             yield return txt.write();
             yield return txt.typeWrite_from_rand_characters();
             
-
             // TO FIND A WAY TO //
             each characters with its own TMPro.tm component
                 control animating of each characters
@@ -807,7 +804,6 @@ namespace SPACE_FOURIER
     
     CAM cam = new CAM(MainCamera);
         cam.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
-
         // TO FIND A WAY TO //
             smooth camera motion ....  by laging behind a certain amount 
             switching between .... persp - ortho
@@ -846,28 +842,30 @@ namespace SPACE_FOURIER
 		public static Mesh mesh_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
 		    
-		    List<Vector2> P = new L<Vector2>();
+		    List<Vector2> P = new List<Vector2>();
 		    
 		    #region process old_P .... to .... P
 		    //
 		    if(t >= 1f) t = 1f - C.de;
 		    if(t <= 0f) return new Mesh(); 
 		    
-            int old_N = old_P.Count - 1;		    
-		    
-		    float i_F = old_N * t,
-		          i_I = (int)i_F;
+            int old_N = old_P.Count - 1;
+
+			float i_F = old_N * t;
+			int   i_I = (int)i_F;
 		    
 		    
 		    for(int i = 0 ; i <= i_I ; i += 1)
 		    {
 		        P.Add(old_P[i]);
 		    }
+			
 		    if((i_F - i_I) > C.de )
 		    {
 		        float dt = i_F - i_I;
-                P.AddZ.lerp( P[i_I] , P[i_I + 1] , dt );
+				P.Add(Z.lerp(old_P[i_I], old_P[i_I + 1], dt));
 		    }
+			
 		    //
             #endregion
 		    
@@ -961,17 +959,17 @@ namespace SPACE_FOURIER
 		public static Mesh mesh_dotted_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
 		    
-		    List<Vector2> P = new L<Vector2>();
+		    List<Vector2> P = new List<Vector2>();
 		    
 		    #region process old_P .... to .... P
 		    //
 		    if(t >= 1f) t = 1f - C.de;
 		    if(t <= 0f) return new Mesh(); 
 		    
-            int old_N = (old_P.Count / 2);		    
-		    
-		    float i_F = old_N * t,
-		          i_I = (int)i_F;
+            int old_N = (old_P.Count / 2);
+
+			float i_F = old_N * t;
+			int i_I = (int)i_F;
 		    
 		    
 		    for(int i = 0 ; i < i_I ; i += 1)
@@ -1007,8 +1005,8 @@ namespace SPACE_FOURIER
 			{
 				Vector2 next = (P[i + 1] - P[i]).normalized;
 
-				V[i + 0] = sum * e; 
-				V[i + 1] = sum * e; 
+				V[i + 0] = next * e; 
+				V[i + 1] = next * e; 
 			}
 			//
 
@@ -1078,21 +1076,21 @@ namespace SPACE_FOURIER
 			List<int> tris = new List<int>();
 			List<Vector2> uvs = new List<Vector2>();
 
-            
-            /*
+
+			/*
             dr
             r
             r
             r
             o
             */
-            
-            float[] r_1D = new float[3]
-            {
-                0f,
-                Z.lerp( 0f , r , t),
-                Z.lerp( r , dr , t)
-            }
+
+			float[] r_1D = new float[3]
+			{
+				0f,
+				Z.lerp( 0f , r , t),
+				Z.lerp( r , dr , t)
+			};
 
 
 			#region verts 
@@ -1120,7 +1118,7 @@ namespace SPACE_FOURIER
             
             for(int y = 0 ; y <= 1 ; y += 1)
             {
-                for(int x = 0 x <= N - 1 ; x += 1)
+                for(int x = 0; x <= N - 1 ; x += 1)
                 {
                     tris.Add((x + 0) + (y + 0) * (N + 1));
                     tris.Add((x + 1) + (y + 0) * (N + 1));
@@ -1162,14 +1160,14 @@ namespace SPACE_FOURIER
 			    new Vector2( +0.5f , +0.5f ),
 			    new Vector2( +0.5f , +0.5f ),
 			};
-			
-			
+
+
 			List<int> tris = new List<int>()
 			{
-			    0 , 1, 2,
-			    0 , 2, 3,
-			    
-			}
+				0 , 1, 2,
+				0 , 2, 3,
+
+			};
 			
 			List<Vector2> uvs = new List<Vector2>()
 			{
@@ -1220,7 +1218,7 @@ namespace SPACE_FOURIER
             for(int i = 1 ; i <= N - 1; i += 1 )
             {
                 tris.Add(0);
-                tris.Add(i + 1)
+				tris.Add(i + 1);
                 tris.Add(i);
             }
             
@@ -1353,4 +1351,3 @@ namespace SPACE_FOURIER
      
     
 }
-
