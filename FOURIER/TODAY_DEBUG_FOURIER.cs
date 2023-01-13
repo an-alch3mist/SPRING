@@ -88,7 +88,7 @@ namespace SPACE_FOURIER
 				//obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
 				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1(50 , 200), 1f / 50 , t));
 
-				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.1f, N : 32, t));
+				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.04f, N : 32, t));
 				obj_disk.tex2D(TEX2D.grad(a, b, 1));
 
 				//
@@ -1150,6 +1150,7 @@ namespace SPACE_FOURIER
 			{
 				vertices = verts.ToArray(),
 				triangles = tris.ToArray(),
+				uv = uvs.ToArray(),
 			};
 			mesh.RecalculateNormals(); 
 			#endregion
@@ -1262,8 +1263,8 @@ namespace SPACE_FOURIER
 	{
 		public static Texture2D grad(Color a , Color b , int N)
 		{
-			Texture2D tex2D = new Texture2D(N + 1 , 1);
-
+			Texture2D tex2D = new Texture2D(2 , 1);
+			
 			for(int i = 0; i <= N; i += 1)
 			{
 				tex2D.SetPixel(i, 0, Color.Lerp(a, b, i * 1f / N));
