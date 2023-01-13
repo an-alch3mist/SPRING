@@ -17,6 +17,9 @@ namespace SPACE_FOURIER
 		[Range(0f, 1f)]
 		public float t = 0f;
 
+		public Color a, b;
+
+
 
 		private void Update()
 		{
@@ -69,7 +72,8 @@ namespace SPACE_FOURIER
 
 			OBJ.INITIALIZE_HOLDER();
 			//
-			OBJ obj = new OBJ("obj_path", 0);
+			OBJ obj_path = new OBJ("obj_path", 0);
+			OBJ obj_disk = new OBJ("obj_disk", 0);
 			
 
 
@@ -81,8 +85,11 @@ namespace SPACE_FOURIER
 			while(true)
 			{
 
-				obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
+				//obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1(50 , 200), 1f / 50 , t));
 
+				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.1f, N : 32, t));
+				obj_disk.tex2D(TEX2D.grad(a, b, 1));
 
 				//
 				Tr_pos_0.position = _path.pos(this.t);
@@ -348,21 +355,24 @@ namespace SPACE_FOURIER
 		float[][] LUT;
 		public void INTIALIZE_LUT()
 		{
-			int N = 10000;
-			LUT = new float[N][];
+			int N = 100000;
+			LUT = new float[N + 1][];
 
 			float sum = 0f;
 			LUT[0] = new float[2] { 0f, sum };
 			//
-			for (int i = 0; i < N; i += 1)
+			for (int i = 1; i <= N; i += 1)
 			{
 				float t_prev = (i - 1) * 1f / N;
 				float t_curr = i * 1f / N;
 
-				sum += Z.mag(pos(t_curr - t_prev));
+
+				sum += Z.mag(pos(t_curr) - pos(t_prev));
 				LUT[i] = new float[2] { t_curr, sum };
 			}
 			//
+			Debug.Log(LUT[LUT.Length - 2][1]);
+			Debug.Log(LUT[LUT.Length - 1][1]);
 		}
 
 
@@ -684,7 +694,7 @@ namespace SPACE_FOURIER
             G = new GameObject(name);
             mf = G.AddComponent<MeshFilter>();
             mr = G.AddComponent<MeshRenderer>();
-			mr.sharedMaterial = new Material(Shader.Find("unlit"));
+			mr.sharedMaterial = new Material(Shader.Find("Unlit/Transparent"));
             
             G.transform.parent = holder;
             G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
@@ -703,6 +713,7 @@ namespace SPACE_FOURIER
         
         public void mesh(Mesh mesh) { mf.sharedMesh = mesh; }
         
+		public void tex2D(Texture2D tex2D) { mr.sharedMaterial.mainTexture = tex2D; }
         
         /*
         TODO -
@@ -1088,8 +1099,8 @@ namespace SPACE_FOURIER
 			float[] r_1D = new float[3]
 			{
 				0f,
-				Z.lerp( 0f , r , t),
-				Z.lerp( r , dr , t)
+				Z.lerp( 0 , r , t),
+				(r + dr)
 			};
 
 
@@ -1100,8 +1111,8 @@ namespace SPACE_FOURIER
                 for(int x = 0 ; x <= N ; x += 1)
                 {
                     verts.Add(Z.polar(2 * C.PI * x * 1f / N) * r_1D[y]);
-                    
-                    uvs.Add(new Vector2(x * 1f/N , y * 1f / 2));
+
+					uvs.Add(new Vector2(y * 1f / 2, 0.5f));
                 }
             }
                         
@@ -1245,6 +1256,26 @@ namespace SPACE_FOURIER
 
 
     }
+
+
+	public static class TEX2D
+	{
+		public static Texture2D grad(Color a , Color b , int N)
+		{
+			Texture2D tex2D = new Texture2D(N + 1 , 1);
+
+			for(int i = 0; i <= N; i += 1)
+			{
+				tex2D.SetPixel(i, 0, Color.Lerp(a, b, i * 1f / N));
+			}
+
+			tex2D.filterMode = FilterMode.Point;
+			tex2D.wrapMode = TextureWrapMode.Clamp;
+			tex2D.Apply();
+
+			return tex2D;
+		}
+	}
 
     #endregion
     // MESH //
