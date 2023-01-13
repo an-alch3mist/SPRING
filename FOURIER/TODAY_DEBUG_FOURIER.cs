@@ -37,7 +37,7 @@ namespace SPACE_FOURIER
 		{
 			#region frame_rate
 			// frame_rate //
-			QualitySettings.vSyncCount = 3;
+			QualitySettings.vSyncCount = 2;
 			yield return null;
 			yield return null;
 			// frame_rate // 
@@ -74,22 +74,40 @@ namespace SPACE_FOURIER
 			//
 			OBJ obj_path = new OBJ("obj_path", 0);
 			OBJ obj_disk = new OBJ("obj_disk", 0);
-			
 
 
 
 
 
 
+			EASE._TYPE = EASE.TYPE._smooth;
+			//
+			C.frames = 10;
+			for(C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.04f, N: 32, EASE.f(C.t) ));
+				obj_disk.tex2D(TEX2D.grad(a, b, 1));
+				yield return null;
+			}
+			//
 
-			while(true)
+
+			C.frames = 30 * 3;
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				yield return null;
+			}
+
+
+
+
+			while (true)
 			{
 
 				//obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
 				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1(50 , 200), 1f / 50 , t));
 
-				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.04f, N : 32, t));
-				obj_disk.tex2D(TEX2D.grad(a, b, 1));
+				
 
 				//
 				Tr_pos_0.position = _path.pos(this.t);
