@@ -104,8 +104,8 @@ namespace SPACE_FOURIER
 			while (true)
 			{
 
-				//obj.mesh(MESH.mesh_path(_path.get_const_spaced_points_0(100), 1f / 50 , t));
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1(50 , 200), 1f / 50 , t));
+				//obj_path.mesh(MESH.mesh_path(_path.get_const_spaced_points_0t(10, t), 1f / 50));
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(50 , 200 , t), 1f / 50));
 
 				
 
@@ -413,6 +413,39 @@ namespace SPACE_FOURIER
 		}
 
 
+		public List<Vector2> get_const_spaced_points_0t(int N = 100 , float t = 0f)
+		{
+			float path_length = get_dist(LUT, 1f);
+
+
+			List<Vector2> P = new List<Vector2>();
+
+
+			if (t >= 1f) t = 1f - C.de;
+			if (t <= 0f) t = 0f + C.de;
+
+			float i_F = get_dist(LUT, t) / path_length * N;
+			int   i_I = (int)i_F;
+			
+
+			//
+			for (int i = 0; i <= i_I; i += 1)
+			{
+				float dist = i * path_length * 1f / N;
+				P.Add(pos(get_t(LUT, dist)));
+			}
+			
+			if(i_F - i_I > C.de)
+			{
+				P.Add(pos(t));
+			}
+			//
+			return P;
+		}
+
+
+
+
 		/*
 		P.Add( path_length * i * 1f / N - de)
 		P.Add( path_length * i * 1f / N + de)
@@ -442,9 +475,50 @@ namespace SPACE_FOURIER
 			return P;
 		}
 
+		public List<Vector2> get_const_spaced_points_1t(int N = 100, int N_de = 400 , float t = 0f)
+		{
+			float path_length = get_dist(LUT, 1f);
+			float dist_e = path_length * 1f / N_de;
+
+			List<Vector2> P = new List<Vector2>();
+			//
+
+			if (t >= 1f) t = 1f - C.de;
+			if (t <= 0f) t = 0f + C.de;  
 
 
-		
+
+			P.Add(pos(0f));
+			P.Add(pos(get_t(LUT, 0f + dist_e)));
+			//
+			for (int i = 1; i < N; i += 1)
+			{
+				float dist = i * path_length * 1f / N;
+				float t_prev = get_t(LUT, dist - dist_e),
+					  t_next = get_t(LUT, dist + dist_e);
+
+				if(t > t_next)
+				{
+					P.Add(pos(t_prev));
+					P.Add(pos(t_next));
+				}
+				else if (t >= t_prev && t <= t_next)
+				{
+					P.Add(pos(t_prev));
+					if (t - t_prev >= C.de) P.Add(pos(t));
+				}
+				else if(t > t_next)
+				{
+					break;
+				}
+				//
+			}
+			//
+			return P;
+		}
+
+
+
 
 		#region ad
 		// ad //
@@ -981,10 +1055,94 @@ namespace SPACE_FOURIER
 
 			return mesh;
 		}
-		
-		
-		
-		
+
+		public static Mesh mesh_path(List<Vector2> P, float e = 1f / 50)
+		{
+
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
+
+
+			int N = P.Count - 1;
+
+			Vector2[] V = new Vector2[N + 1];
+			#region V
+			V[0] = (P[1] - P[0]).normalized * e;
+			//
+			for (int i = 1; i <= P.Count - 2; i += 1)
+			{
+				Vector2 prev = (P[i - 1] - P[i]).normalized,
+						next = (P[i + 1] - P[i]).normalized;
+
+				Vector2 sum = (next - prev).normalized;
+
+				V[i] = sum * e / Z.dot(-prev, sum); // -prev
+
+				/*
+				Debug.DrawLine(P[i], P[i] + prev, Color.green, 10f);
+				Debug.DrawLine(P[i], P[i] + next, Color.gray, 10f);
+				Debug.DrawLine(P[i], P[i] + sum, Color.cyan, 10f);
+				Debug.DrawLine(P[i], P[i] + V[i], Color.magenta, 10f);
+				*/
+			}
+			//
+			V[N] = (P[P.Count - 1] - P[P.Count - 2]).normalized * e;
+
+
+
+
+			for (int i = 0; i < V.Length; i += 1)
+			{ V[i] = new Vector2(-V[i].y, V[i].x); }
+			#endregion
+
+
+			#region verts , tris
+			for (int x = 0; x <= P.Count - 1; x += 1)
+			{
+				/*
+				Debug.DrawLine(P[x], P[x] - V[x], Color.white, 10f);
+				Debug.DrawLine(P[x], P[x] + V[x], Color.red, 10f);
+				*/
+
+				verts.Add(P[x] - V[x]);
+				verts.Add(P[x] + V[x]);
+
+				uvs.Add(new Vector2(0f, 0f));
+				uvs.Add(new Vector2(0f, 0f));
+
+
+				if (x == 0) continue;
+
+				int index = verts.Count - 1;
+				tris.Add(index - 3);
+				tris.Add(index - 2);
+				tris.Add(index - 0);
+
+				tris.Add(index - 3);
+				tris.Add(index - 0);
+				tris.Add(index - 1);
+
+
+
+			}
+			#endregion
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+				uv = uvs.ToArray(),
+			};
+			mesh.RecalculateNormals();
+			#endregion
+
+			return mesh;
+		}
+
+
 		public static Mesh mesh_dotted_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
 		    
@@ -1091,15 +1249,90 @@ namespace SPACE_FOURIER
 
 			return mesh;
 		}
-		
-		
-		
 
 
-        /*
+		public static Mesh mesh_dotted_path(List<Vector2> P, float e = 1f / 50)
+		{
+
+			List<Vector3> verts = new List<Vector3>();
+			List<int> tris = new List<int>();
+			List<Vector2> uvs = new List<Vector2>();
+
+
+			int N = P.Count - 1;
+
+			Vector2[] V = new Vector2[N + 1];
+
+
+			#region V
+			//
+			for (int i = 0; i <= P.Count - 2; i += 2)
+			{
+				Vector2 next = (P[i + 1] - P[i]).normalized;
+
+				V[i + 0] = next * e;
+				V[i + 1] = next * e;
+			}
+			//
+
+			for (int i = 0; i < V.Length; i += 1)
+			{ V[i] = new Vector2(-V[i].y, V[i].x); }
+
+			#endregion
+
+
+
+			#region verts , tris
+			for (int x = 0; x <= P.Count - 2; x += 2)
+			{
+
+				verts.Add(P[x + 0] - V[x + 0]);
+				verts.Add(P[x + 0] + V[x + 0]);
+				verts.Add(P[x + 1] - V[x + 1]);
+				verts.Add(P[x + 1] + V[x + 1]);
+
+
+				uvs.Add(new Vector2(0f, 0f));
+				uvs.Add(new Vector2(0f, 0f));
+				uvs.Add(new Vector2(0f, 0f));
+				uvs.Add(new Vector2(0f, 0f));
+
+
+
+				int index = verts.Count - 1;
+				tris.Add(index - 3);
+				tris.Add(index - 2);
+				tris.Add(index - 0);
+
+
+				tris.Add(index - 3);
+				tris.Add(index - 0);
+				tris.Add(index - 1);
+
+
+
+			}
+			#endregion
+
+
+			#region mesh
+			Mesh mesh = new Mesh()
+			{
+				vertices = verts.ToArray(),
+				triangles = tris.ToArray(),
+				uv = uvs.ToArray()
+			};
+			mesh.RecalculateNormals();
+			#endregion
+
+			return mesh;
+		}
+
+
+		/*
         TODO wave effect after drawing point
         */
-        public static Mesh mesh_disc(float r , float dr , int N = 16 , float t = 0f)
+		public static Mesh mesh_disc(float r , float dr , int N = 16 , float t = 0f)
 		{
 			List<Vector3> verts = new List<Vector3>();
 			List<int> tris = new List<int>();
