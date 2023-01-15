@@ -33,6 +33,7 @@ namespace SPACE_FOURIER_1
 
 
 
+
 		private void Update()
 		{
 			if (Input.GetMouseButtonDown(1))
