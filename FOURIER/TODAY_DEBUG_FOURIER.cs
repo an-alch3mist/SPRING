@@ -5,19 +5,31 @@ using System.Collections.Generic;
 
 
 
-namespace SPACE_FOURIER
+namespace SPACE_FOURIER_1
 {
 
 
 	public class DEBUG_FOURIER_1 : MonoBehaviour
 	{
+
+		public Camera cam;
+
+
 		public Transform Tr_pos_0;
+
 		public Transform Tr_P_0;
+		public Transform Tr_P_1;
+		public Transform Tr_P_2;
 
 		[Range(0f, 1f)]
 		public float t = 0f;
 
 		public Color a, b;
+
+
+
+		[Header("sprite")]
+		public SpriteRenderer sr;
 
 
 
@@ -33,6 +45,42 @@ namespace SPACE_FOURIER
 
 
 
+		#region cam
+		List<Vector2> P_2;
+		List<Vector2> S_2;
+
+
+		void cam_POS(Vector2 p)
+		{
+			cam.transform.position = new Vector3(p.x, p.y, -10f);
+		}
+
+		void cam_SCALE(float s)
+		{
+			cam.orthographicSize = s;
+		}
+
+
+		IEnumerator moveTo(int index)
+		{
+			Vector2 from = cam.transform.position;
+			float from_s = cam.orthographicSize;
+
+			Vector2 to = P_2[index];
+			float to_s = S_2[index].y / 2;
+
+
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				cam_POS(Z.lerp(from, to, C.t));
+				cam_SCALE(Z.lerp(from_s, to_s, C.t));
+
+				yield return C.wait;
+			}
+		}
+		#endregion
+
+
 		IEnumerator STIMULATE()
 		{
 			#region frame_rate
@@ -45,18 +93,39 @@ namespace SPACE_FOURIER
 
 
 
-
 			#region P
-			List<Vector2> P = new List<Vector2>();
+			List<Vector2> P_0 = new List<Vector2>();
 
 			for (int i = 0; i < Tr_P_0.childCount; i += 1)
-			{ P.Add(Tr_P_0.GetChild(i).position); }
+			{ P_0.Add(Tr_P_0.GetChild(i).position); }
+
+			List<Vector2> P_1 = new List<Vector2>();
+
+			for (int i = 0; i < Tr_P_1.childCount; i += 1)
+			{ P_1.Add(Tr_P_1.GetChild(i).position); }
+
+
+			P_2 = new List<Vector2>();
+
+			for (int i = 0; i < Tr_P_2.childCount; i += 1)
+			{ P_2.Add(Tr_P_2.GetChild(i).position); }
+
+
+			S_2 = new List<Vector2>();
+
+			for (int i = 0; i < Tr_P_2.childCount; i += 1)
+			{ S_2.Add(Tr_P_2.GetChild(i).localScale); }
 
 			#endregion
 
 
+			//Debug.Log(Resources.Load<Sprite>("FOURIER_1/FOURIER_1Sprite"));
+			// sr.sprite = Resources.Load<Sprite>("FOURIER_1");
+
+
+
 			PATH _path = new PATH();
-			_path.P = P;
+			_path.P = P_0;
 			_path.INTIALIZE_LUT();
 
 			FOURIER _fourier = new FOURIER();
@@ -71,32 +140,141 @@ namespace SPACE_FOURIER
 
 
 			OBJ.INITIALIZE_HOLDER();
+			OBJS.INITIALIZE_HOLDER();
 			//
 			OBJ obj_path = new OBJ("obj_path", 0);
-			OBJ obj_disk = new OBJ("obj_disk", 0);
-
-
+			OBJ obj_disk = new OBJ("obj_disk", 1);
+			OBJS objs_arrow = new OBJS("objs_arrow", 3);
 
 
 
 
 			EASE._TYPE = EASE.TYPE._smooth;
-			//
+			yield return moveTo(1);
+			
+
+
+
+			#region animate disc initialize
+			EASE._TYPE = EASE.TYPE._smooth;
+
 			C.frames = 10;
-			for(C.i = 0; C.i < C.frames; C.i += 1)
-			{
-				obj_disk.mesh(MESH.mesh_disc(0.1f, 0.04f, N: 32, EASE.f(C.t) ));
-				obj_disk.tex2D(TEX2D.grad(a, b, 1));
-				yield return null;
-			}
-			//
-
-
-			C.frames = 30 * 3;
 			for (C.i = 0; C.i < C.frames; C.i += 1)
 			{
+				obj_disk.mesh(MESH.mesh_disc(0.05f, 0.01f, N: 32, C.t));
+				obj_disk.tex2D(TEX2D.grad(a, b, 1));
+
 				yield return null;
 			}
+			// 
+			#endregion
+
+
+			#region anim arrow scale
+			objs_arrow.mesh("FOURIER_1");
+
+			EASE._TYPE = EASE.TYPE._smooth;
+			C.frames = 10;
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				objs_arrow.SCALE(Z.lerp(0f, 0.5f, C.t), Z.lerp(0f, 0.5f, C.t));
+				yield return null;
+			}
+
+			#endregion
+
+			#region animate arrow rotate
+			C.frames = 20;
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				objs_arrow.ROT(Z.lerp(0f, C.PI * 0.75f, C.t));
+				yield return null;
+			}
+
+			#endregion
+
+
+
+			EASE._TYPE = EASE.TYPE._smooth;
+			yield return moveTo(0);
+
+
+
+			//
+			yield return C.wait_(3 * 30);
+
+
+
+			#region draw path
+			C.frames = 70;
+			EASE._TYPE = EASE.TYPE._inQuad;
+
+
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				_path.P = P_0;
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(100, 400, C.t), 1f / 50));
+
+
+				obj_disk.POS(_path.pos(C.t));
+				cam_POS(_path.pos(C.t));
+
+				yield return null;
+			} 
+			#endregion
+
+
+			#region lerp between paths
+			C.frames = 30;
+			EASE._TYPE = EASE.TYPE._smooth;
+
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				//
+				List<Vector2> P_0_to_1 = new List<Vector2>();
+
+				for (int i = 0; i < P_0.Count; i += 1)
+				{
+					P_0_to_1.Add(Z.lerp(P_0[i], P_1[i], C.t));
+				}
+
+				_path.P = P_0_to_1;
+				_path.INTIALIZE_LUT();
+
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110, 450, 1f), 1f / 50));
+
+
+				obj_disk.POS(_path.pos(1f));
+				cam_POS(_path.pos(1f));
+
+
+				//
+				yield return C.wait;
+			} 
+			#endregion
+
+
+
+
+			//
+			yield return C.wait_(30);
+
+
+
+
+
+			C.frames = 30;
+			for (C.i = 0; C.i < C.frames; C.i += 1)
+			{
+				float t = Z.lerp(1f, this.t, C.t);
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110, 450, t)));
+
+				obj_disk.POS(_path.pos(t));
+				cam_POS(_path.pos(t));
+				//
+				yield return null;
+			}
+
 
 
 
@@ -105,12 +283,14 @@ namespace SPACE_FOURIER
 			{
 
 				//obj_path.mesh(MESH.mesh_path(_path.get_const_spaced_points_0t(10, t), 1f / 50));
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(50 , 200 , t), 1f / 50));
+				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110 , 450 , this.t), 1f / 50));
 
-				
 
 				//
-				Tr_pos_0.position = _path.pos(this.t);
+				Vector2 p = _path.pos(this.t);
+				obj_disk.POS(p);
+				cam_POS(p);
+
 
 
 				_fourier.update__arrow_1D(this.t);
@@ -134,7 +314,10 @@ namespace SPACE_FOURIER
 			}
 			
 
+
+
 			yield return null;
+
 		}
 
 
@@ -373,7 +556,7 @@ namespace SPACE_FOURIER
 		float[][] LUT;
 		public void INTIALIZE_LUT()
 		{
-			int N = 100000;
+			int N = 10000;
 			LUT = new float[N + 1][];
 
 			float sum = 0f;
@@ -556,8 +739,6 @@ namespace SPACE_FOURIER
 
 	}
 
-
-
 	#endregion
 	//// STUFF ////
 
@@ -588,6 +769,28 @@ namespace SPACE_FOURIER
 		public static float dot(Vector3 a, Vector3 b)
 		{
 			return a.x * b.x + a.y * b.y + a.z * b.z;
+		}
+		#endregion
+
+		#region area
+		public static float area(Vector2 a , Vector2 b)
+		{
+			return a.x * b.y - a.y * b.x;
+		}
+		#endregion
+
+
+		#region angle
+		public static float angle(Vector2 n0  , Vector2 n1)
+		{
+			float X = Z.dot(n0, n1);
+			float Y = Z.area(n0, n1);
+
+			float a = Mathf.Atan2(Y, X);
+			if (a < 0f)
+				a += 2 * C.PI;
+
+			return a;
 		}
 		#endregion
 
@@ -623,10 +826,16 @@ namespace SPACE_FOURIER
 	#endregion
 
 	#region C
+	// TODO C.t return using EASE._TYPE //
 	public static class C
 	{
 		public static float PI = Mathf.PI;
-		public static Vector2 zero = Vector2.zero;
+		public static Vector2 zero = new Vector2(0, 0),
+							  r = new Vector2(+1, 0),
+							  l = new Vector2(-1, 0),
+							  u = new Vector2(0, +1),
+							  d = new Vector2(0, -1);
+
 		public static float de = 1f / 1000000;
 
 		#region round(x) , sign(x)
@@ -674,7 +883,21 @@ namespace SPACE_FOURIER
 
 		public static int frames = 30;
 		public static int i = 0;
-		public static float t { get { return C.i * 1f / (C.frames - 1); } }
+		public static float t { get { return EASE.f(C.i * 1f / (C.frames - 1)); } }
+
+
+
+		public static IEnumerator wait
+		{
+			get { return null; }
+		}
+		public static IEnumerator wait_(int frames)
+		{
+			for(int i = 0; i < frames; i += 1)
+			{
+				yield return null;
+			}
+		}
 
 
 
@@ -721,7 +944,7 @@ namespace SPACE_FOURIER
 			}
 			if (_TYPE == TYPE._outQuad)
 			{
-				return (1 - t) * (1 - t) * (1 - t) * (1 - t);
+				return 1 - (1 - t) * (1 - t) * (1 - t) * (1 - t);
 			}
 			if (_TYPE == TYPE._inoutBack)
 			{
@@ -738,7 +961,7 @@ namespace SPACE_FOURIER
 
 
 
-	} 
+	}
 	#endregion
 
 
@@ -754,185 +977,219 @@ namespace SPACE_FOURIER
 	// OBJ //
 	#region OBJ
 
+	#region OBJ
+	
 	/*
-    
-    OBJ.INITIALIZE_HOLDER
-        OBJ obj = new OBJ(string name , int layer = 0);
-            obj.POS(v2)
-            obj.ROT(float)
-    */
+	OBJ.INITIALIZE_HOLDER
+	OBJ obj = new OBJ(string name , int layer = 0);
+		obj.POS(v2)
+		obj.ROT(float)
+	*/
+
+
 	public class OBJ
-    {
-        #region HOLDER
-        
-        public static Transform holder;
-        public static void INITIALIZE_HOLDER()
-        {
-            if(GameObject.Find("holder") != null)
-                GameObject.Destroy(GameObject.Find("holder"));
-                
-            holder = new GameObject("holder").transform;
-        }
-        
-        #endregion
-        
-        
-        MeshFilter mf;
-        MeshRenderer mr;
-        GameObject G;
-        
-        public OBJ(string name , int layer = 0)
-        {
-            G = new GameObject(name);
-            mf = G.AddComponent<MeshFilter>();
-            mr = G.AddComponent<MeshRenderer>();
+	{
+		#region HOLDER
+
+		public static Transform holder;
+		public static void INITIALIZE_HOLDER()
+		{
+			if (GameObject.Find("holder") != null)
+				GameObject.Destroy(GameObject.Find("holder"));
+
+			holder = new GameObject("holder").transform;
+		}
+
+		#endregion
+
+
+		MeshFilter mf;
+		MeshRenderer mr;
+		GameObject G;
+
+		public OBJ(string name, int layer = 0)
+		{
+			G = new GameObject(name);
+			mf = G.AddComponent<MeshFilter>();
+			mr = G.AddComponent<MeshRenderer>();
 			mr.sharedMaterial = new Material(Shader.Find("Unlit/Transparent"));
-            
-            G.transform.parent = holder;
-            G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
-        }
-        
-        
-        #region CONTROLS
-        public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
-        
-        public void POS(Vector2 pos)            { G.transform.position           = new Vector3(pos.x , pos.y , G.transform.position.z ); }
-        
-        public void ROT(float angle)            { G.transform.localEulerAngles   = new Vector3(0f , 0f , angle / C.PI * 180 ); }
 
-        public void SCALE(float x , float y)    { G.transform.localScale         = new Vector3(x , y , 1f); }
+			G.transform.parent = holder;
+			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 10);
+		}
 
-        
-        public void mesh(Mesh mesh) { mf.sharedMesh = mesh; }
-        
+
+		#region CONTROLS
+		public void enable(bool need_to_enable) { G.SetActive(need_to_enable); }
+
+		public void POS(Vector2 pos) { G.transform.position = new Vector3(pos.x, pos.y, G.transform.position.z); }
+
+		public void ROT(float angle) { G.transform.localEulerAngles = new Vector3(0f, 0f, angle / C.PI * 180); }
+
+		public void SCALE(float x, float y) { G.transform.localScale = new Vector3(x, y, 1f); }
+
+		public void align(Vector2 a, Vector2 b, bool scale = false)
+		{
+
+			POS(a);
+			ROT(Z.angle(C.r, b - a));
+			//
+			if (scale)
+			{
+				float mag = Z.mag(b - a);
+				SCALE(mag, mag);
+			}
+		}   //
+
+
+
+		public void mesh(Mesh mesh) { mf.sharedMesh = mesh; }
+
 		public void tex2D(Texture2D tex2D) { mr.sharedMaterial.mainTexture = tex2D; }
-        
-        /*
+
+		/*
         TODO -
             col
             grad
             texture
         */
-        public void col(Color col)
-        {
-            Texture2D tex2D = new Texture2D(1 , 1);
-            tex2D.SetPixel(0, 0, col);
-            tex2D.filterMode = FilterMode.Point;
-            tex2D.Apply();
-            
-            mr.sharedMaterial.mainTexture = tex2D;
-        }
-        #endregion
-        
-        
-    }
-    
-    
-    public class OBJS
-    {
-        #region HOLDER
-        
-        public static Transform holder;
-        public static void INITIALIZE_HOLDER()
-        {
-            if(GameObject.Find("holderS") != null)
-                GameObject.Destroy(GameObject.Find("holderS"));
-                
-            holder = new GameObject("holderS").transform;
-        }
-        
-        #endregion
-        
-        
-        SpriteRenderer sr;
-        GameObject G;
-        
-        public OBJS(string name , int layer = 0)
-        {
-            G = new GameObject(name);
-            sr = G.AddComponent<SpriteRenderer>();
-            
-            G.transform.parent = OBJS.holder;
-            G.transform.position = new Vector3(0f , 0f , -layer * 1f / 10);
-        }
-        
-        
-        #region CONTROLS
-        public void enable(bool need_to_enable) { G.SetActive(need_to_enable);}
-        
-        public void POS(Vector2 pos)            { G.transform.position          = new Vector3(pos.x , pos.y , G.transform.position.z ); }
-        
-        public void ROT(float angle)            { G.transform.localEulerAngles  = new Vector3(0f, 0f, angle / C.PI * 180); }
+		public void col(Color col)
+		{
+			Texture2D tex2D = new Texture2D(1, 1);
+			tex2D.SetPixel(0, 0, col);
+			tex2D.filterMode = FilterMode.Point;
+			tex2D.Apply();
 
-        public void SCALE(float x , float y)    { G.transform.localScale        = new Vector3(x , y , 1f); }
+			mr.sharedMaterial.mainTexture = tex2D;
+		}
+		#endregion
 
-        
-        public void mesh(string locate ) { sr.sprite = Resources.Load<Sprite>( locate ); }
-        
-        
 
-        public void alpha(float alpha) { sr.color = new Color(0f, 0f, 0f, alpha); }
-        #endregion
-        
-        
-    }
-    
+	}
 
-    /*
-    TEXT.INITIALIZE_HOLDER
-        TEXT txt = new TEXT(string str, int layer = 0);
-            txt.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
-            txt.enable(true);
-            yield return txt.write();
-            yield return txt.typeWrite_from_rand_characters();
-            
-            // TO FIND A WAY TO //
-            each characters with its own TMPro.tm component
-                control animating of each characters
-            // TO FIND A WAY TO //
-    
-    
-    */
-    public class TEXT
-    {
-        
-    }
-    
-    
-    
-    
-    
-    
-    /*
-    
-    CAM cam = new CAM(MainCamera);
-        cam.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
-        // TO FIND A WAY TO //
-            smooth camera motion ....  by laging behind a certain amount 
-            switching between .... persp - ortho
-        // TO FIND A WAY TO //
-    
-    */
-    public class CAM
-    {
-        
-        
-    }
-    
-    
-    #endregion
-    // OBJ //
+	#endregion
+
+	#region OBJS
+	public class OBJS
+	{
+		#region HOLDER
+
+		public static Transform holder;
+		public static void INITIALIZE_HOLDER()
+		{
+			if (GameObject.Find("holderS") != null)
+				GameObject.Destroy(GameObject.Find("holderS"));
+
+			holder = new GameObject("holderS").transform;
+		}
+
+		#endregion
+
+
+		SpriteRenderer sr;
+		GameObject G;
+
+		public OBJS(string name, int layer = 0)
+		{
+			G = new GameObject(name);
+			sr = G.AddComponent<SpriteRenderer>();
+
+			G.transform.parent = OBJS.holder;
+			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 10);
+		}
+
+
+		#region CONTROLS
+		public void enable(bool need_to_enable) { G.SetActive(need_to_enable); }
+
+		public void POS(Vector2 pos) { G.transform.position = new Vector3(pos.x, pos.y, G.transform.position.z); }
+
+		public void ROT(float angle) { G.transform.localEulerAngles = new Vector3(0f, 0f, angle / C.PI * 180); }
+
+		public void SCALE(float x, float y) { G.transform.localScale = new Vector3(x, y, 1f); }
+
+		public void align(Vector2 a, Vector2 b, bool scale = false)
+		{
+			POS(a);
+			ROT(Z.angle(C.r, b - a));
+
+			//
+			if (scale)
+			{
+				float mag = Z.mag(b - a);
+				SCALE(mag, mag);
+			}
+		}   //
+
+
+		public void mesh(string locate) { sr.sprite = Resources.Load<Sprite>(locate); }
 
 
 
-    // MESH //
-    #region MESH
-    /*
+		public void alpha(float alpha) { sr.color = new Color(0f, 0f, 0f, alpha); }
+		#endregion
+
+
+	} 
+	#endregion
+
+
+	#region TEXT
+	/*
+	TEXT.INITIALIZE_HOLDER
+	TEXT txt = new TEXT(string str, int layer = 0);
+		txt.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
+		txt.enable(true);
+		yield return txt.write();
+		yield return txt.typeWrite_from_rand_characters();
+
+		// TO FIND A WAY TO //
+		each characters with its own TMPro.tm component
+			control animating of each characters
+		// TO FIND A WAY TO //
+
+
+	*/
+	public class TEXT
+	{
+
+	}
+	#endregion
+
+
+	
+	#region CAM
+	/*
+
+	CAM cam = new CAM(MainCamera);
+	cam.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
+	// TO FIND A WAY TO //
+		smooth camera motion ....  by laging behind a certain amount 
+		switching between .... persp - ortho
+	// TO FIND A WAY TO //
+
+	*/
+	public class CAM
+	{
+
+
+	} 
+	#endregion
+
+
+	#endregion
+	// OBJ //
+
+
+
+	// MESH //
+	#region MESH
+	/*
     process points .... t
     generate mesh
     */
-    
-    public static class MESH
+
+	public static class MESH
     {
 
 		/*
@@ -942,7 +1199,7 @@ namespace SPACE_FOURIER
 		*/
 
 
-		public static Mesh mesh_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
+		public static Mesh mesh_path_t(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
 		    
 		    List<Vector2> P = new List<Vector2>();
@@ -1143,7 +1400,7 @@ namespace SPACE_FOURIER
 		}
 
 
-		public static Mesh mesh_dotted_path(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
+		public static Mesh mesh_dotted_path_t(List<Vector2> old_P , float e = 1f/50 , float t = 0f)
 		{
 		    
 		    List<Vector2> P = new List<Vector2>();
@@ -1329,6 +1586,47 @@ namespace SPACE_FOURIER
 		}
 
 
+		public static Mesh mesh_line(Vector2 a , Vector2 b , float e = 1f/50, float t = 1f)
+		{
+			if (t <= 0f) return new Mesh();
+
+
+			Vector2 nX = b - a,
+					nY = new Vector2(-nX.y, nX.x);
+			nY = nY.normalized;
+
+
+			b = Z.lerp(a, b, t);
+			Mesh mesh = new Mesh()
+			{
+				vertices = new Vector3[4]
+				{
+					a - nY * e,
+					a + nY * e,
+					b + nY * e,
+					a - nY * e,
+				},
+				triangles = new int[2 * 3]
+				{
+					0, 1, 2,
+					0, 2, 3,
+				},
+				uv = new Vector2[4]
+				{
+					new Vector2(0f , 0f),
+					new Vector2(0f , 1f),
+					new Vector2(1f , 1f),
+					new Vector2(1f , 0f),
+				}
+			};
+			//
+			mesh.RecalculateNormals();
+
+			return mesh;
+
+		}
+
+
 		/*
         TODO wave effect after drawing point
         */
@@ -1350,8 +1648,8 @@ namespace SPACE_FOURIER
 			float[] r_1D = new float[3]
 			{
 				0f,
-				Z.lerp( 0 , r , t),
-				(r + dr)
+				Z.lerp( 0 , r - dr , t),
+				r,
 			};
 
 
