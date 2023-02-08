@@ -2055,7 +2055,9 @@ STUFF
         P
         pos
         LUT
-        points
+        points  
+            // TODO dotted line moving
+        
 
 OBJ
     OBJ
@@ -2063,6 +2065,10 @@ OBJ
 
 CAM
     
+
+
+
+
 
 
 RENDER
