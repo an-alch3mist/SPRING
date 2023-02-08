@@ -1,35 +1,51 @@
-//
+
+
+1 of 12
+FOURIER_1_1
+Inbox
+
+-max- <pewd3pi3@gmail.com>
+Attachments
+8:49 AM (7 hours ago)
+to me
+
+FOURIER_1_1
+.cs
+.unity
+2
+ Attachments
+  •  Scanned by Gmail
+﻿//
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 
 
-namespace SPACE_FOURIER_1
+
+namespace SPACE_FOURIER_1_1
 {
 
-
-	public class DEBUG_FOURIER_1 : MonoBehaviour
+	public class DEBUG_FOURIER_1_1 : MonoBehaviour
 	{
 
+		public Transform TR_pos;
+		[Range(0f, 1f)]
+		public float t = 0f;
+
+
+
 		public Camera cam;
-
-
-		public Transform Tr_pos_0;
+		public Camera cam_1;
 
 		public Transform Tr_P_0;
 		public Transform Tr_P_1;
 		public Transform Tr_P_2;
 
-		[Range(0f, 1f)]
-		public float t = 0f;
+		public Transform TRAIL_0;
+		public Transform TRAIL_1;
+		public Transform TRAIL_2;
 
-		public Color a, b;
-
-
-
-		[Header("sprite")]
-		public SpriteRenderer sr;
 
 
 
@@ -43,7 +59,7 @@ namespace SPACE_FOURIER_1
 				StartCoroutine(STIMULATE());
 			}
 		}
-
+		
 
 
 		#region cam
@@ -92,228 +108,142 @@ namespace SPACE_FOURIER_1
 			// frame_rate // 
 			#endregion
 
-
+			OBJ.INITIALIZE_HOLDER();
+			OBJS.INITIALIZE_HOLDER();
 
 			#region P
-			List<Vector2> P_0 = new List<Vector2>();
 
+			List<Vector2> P_0 = new List<Vector2>();
 			for (int i = 0; i < Tr_P_0.childCount; i += 1)
 			{ P_0.Add(Tr_P_0.GetChild(i).position); }
 
-			List<Vector2> P_1 = new List<Vector2>();
 
+			List<Vector2> P_1 = new List<Vector2>();
 			for (int i = 0; i < Tr_P_1.childCount; i += 1)
 			{ P_1.Add(Tr_P_1.GetChild(i).position); }
 
 
-			P_2 = new List<Vector2>();
 
+			P_2 = new List<Vector2>();
 			for (int i = 0; i < Tr_P_2.childCount; i += 1)
 			{ P_2.Add(Tr_P_2.GetChild(i).position); }
 
 
 			S_2 = new List<Vector2>();
-
 			for (int i = 0; i < Tr_P_2.childCount; i += 1)
 			{ S_2.Add(Tr_P_2.GetChild(i).localScale); }
 
 			#endregion
 
 
-			//Debug.Log(Resources.Load<Sprite>("FOURIER_1/FOURIER_1Sprite"));
-			// sr.sprite = Resources.Load<Sprite>("FOURIER_1");
-
-
 
 			PATH _path = new PATH();
-			_path.P = P_0;
-			_path.INTIALIZE_LUT();
+			_path.P = P_1;
+			_path.INTIALIZE_LUT(N : 100000 );
+
+			/*
+			Debug.Log(P_1.Count);
+			while(true)
+			{
+
+				TR_pos.position = _path.pos(this.t);
+				yield return null;
+
+			}
+			*/
+
+			/*
+			System.IO.File.WriteAllText(
+				Application.dataPath + "/STORE/STORE_SAVE.txt",
+				JsonUtility.ToJson(_path, true)
+			);
+			*/
 
 			FOURIER _fourier = new FOURIER();
 			_fourier._bezier_path = _path;
-			_fourier.INITIALIZE(Cn_count : 4);
+			_fourier.INITIALIZE(Cn_count : 310); // 40
 
 
 
 
 
 
+			_fourier.update__arrow_1D(t: 0f);
 
+			#region initialize_OBJS_1D
+			OBJS[] OBJS_1D = new OBJS[_fourier.arrow_1D.Length];
 
-			OBJ.INITIALIZE_HOLDER();
-			OBJS.INITIALIZE_HOLDER();
-			//
-			OBJ obj_path = new OBJ("obj_path", 0);
-			OBJ obj_disk = new OBJ("obj_disk", 1);
-			OBJS objs_arrow = new OBJS("objs_arrow", 3);
-
-
-
-
-			EASE._TYPE = EASE.TYPE._smooth;
-			yield return moveTo(1);
-			
-
-
-
-			#region animate disc initialize
-			EASE._TYPE = EASE.TYPE._smooth;
-
-			C.frames = 10;
-			for (C.i = 0; C.i < C.frames; C.i += 1)
+			for (int i = 0; i < OBJS_1D.Length; i += 1)
 			{
-				obj_disk.mesh(MESH.mesh_disc(0.05f, 0.01f, N: 32, C.t));
-				obj_disk.tex2D(TEX2D.grad(a, b, 1));
-
-				yield return null;
-			}
-			// 
-			#endregion
-
-
-			#region anim arrow scale
-			objs_arrow.mesh("FOURIER_1");
-
-			EASE._TYPE = EASE.TYPE._smooth;
-			C.frames = 10;
-			for (C.i = 0; C.i < C.frames; C.i += 1)
-			{
-				objs_arrow.SCALE(Z.lerp(0f, 0.5f, C.t), Z.lerp(0f, 0.5f, C.t));
-				yield return null;
-			}
-
-			#endregion
-
-			#region animate arrow rotate
-			C.frames = 20;
-			for (C.i = 0; C.i < C.frames; C.i += 1)
-			{
-				objs_arrow.ROT(Z.lerp(0f, C.PI * 0.75f, C.t));
-				yield return null;
-			}
-
-			#endregion
-
-
-
-			EASE._TYPE = EASE.TYPE._smooth;
-			yield return moveTo(0);
-
-
-
-			//
-			yield return C.wait_(3 * 30);
-
-
-
-			#region draw path
-			C.frames = 70;
-			EASE._TYPE = EASE.TYPE._inQuad;
-
-
-			for (C.i = 0; C.i < C.frames; C.i += 1)
-			{
-				_path.P = P_0;
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(100, 400, C.t), 1f / 50));
-
-
-				obj_disk.POS(_path.pos(C.t));
-				cam_POS(_path.pos(C.t));
-
-				yield return null;
-			} 
-			#endregion
-
-
-			#region lerp between paths
-			C.frames = 30;
-			EASE._TYPE = EASE.TYPE._smooth;
-
-			for (C.i = 0; C.i < C.frames; C.i += 1)
-			{
-				//
-				List<Vector2> P_0_to_1 = new List<Vector2>();
-
-				for (int i = 0; i < P_0.Count; i += 1)
-				{
-					P_0_to_1.Add(Z.lerp(P_0[i], P_1[i], C.t));
-				}
-
-				_path.P = P_0_to_1;
-				_path.INTIALIZE_LUT();
-
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110, 450, 1f), 1f / 50));
-
-
-				obj_disk.POS(_path.pos(1f));
-				cam_POS(_path.pos(1f));
-
-
-				//
-				yield return C.wait;
+				OBJS _objs = new OBJS("arrow_" + i.ToString(), -i);
+				_objs.mesh("FOURIER_1");
+				_objs.enable(false);
+				
+				if (i < 10)
+					_objs.G.layer = LayerMask.NameToLayer("trail_0");
+				
+				OBJS_1D[i] = _objs;
 			} 
 			#endregion
 
 
 
 
+
+
+
+			C.frames = 30 * 75;
 			//
-			yield return C.wait_(30);
-
-
-
-
-
-			C.frames = 30;
-			for (C.i = 0; C.i < C.frames; C.i += 1)
+			for(C.i = 0; C.i < C.frames; C.i += 1)
 			{
-				float t = Z.lerp(1f, this.t, C.t);
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110, 450, t)));
-
-				obj_disk.POS(_path.pos(t));
-				cam_POS(_path.pos(t));
-				//
-				yield return null;
-			}
+				_fourier.update__arrow_1D((C.t * 1.2f ) % 1f);
 
 
-
-
-
-			while (true)
-			{
-
-				//obj_path.mesh(MESH.mesh_path(_path.get_const_spaced_points_0t(10, t), 1f / 50));
-				obj_path.mesh(MESH.mesh_dotted_path(_path.get_const_spaced_points_1t(110 , 450 , this.t), 1f / 50));
-
-
-				//
-				Vector2 p = _path.pos(this.t);
-				obj_disk.POS(p);
-				cam_POS(p);
-
-
-
-				_fourier.update__arrow_1D(this.t);
+				DRAW.dt = Time.deltaTime;
+				DRAW.col = Color.HSVToRGB(0f, 0.5f, 0.9f);
 
 
 				Vector2 sum = Vector2.zero;
-				for(int i = 0; i < _fourier.arrow_1D.Length; i += 1)
+				for (int i = 0; i < _fourier.arrow_1D.Length; i += 1)
 				{
 					Vector2 v = new Vector2(_fourier.arrow_1D[i][0], _fourier.arrow_1D[i][1]);
-					Debug.DrawLine(
+
+
+					if (i != 0)
+						OBJS_1D[i].enable(true);
+					OBJS_1D[i].align(sum, sum + v, true);
+
+
+					DRAW.LINE(
 						sum,
 						sum + v,
-						Color.red,
-						Time.deltaTime
+						e : 1f / 400
 					);
+
+					
 					sum += v;
 				}
+
+
+
+				//
+				cam_1.transform.position = Z.lerp(
+					cam.transform.position,
+					new Vector3(sum.x, sum.y, -10f),
+					0.999f
+				);
 				//
 
-				yield return null;
+
+
+
+				TRAIL_0.gameObject.SetActive(true);
+				TRAIL_0.position = new Vector3(sum.x, sum.y, -3f);
+				TRAIL_1.position = new Vector3(sum.x, sum.y, -3f);
+
+
+				yield return C.wait;
 			}
-			
 
 
 
@@ -373,21 +303,20 @@ namespace SPACE_FOURIER_1
 			{
 				arrow_1D = new float[Cn_1D.Count][];
 
-				string str = "";
 
 				for(int i0 = 0; i0 < Cn_1D.Count; i0 += 1)
 				{
 					int n;
 
+					#region find_n from i0
 					if (i0 == 0) n = 0;
 					else
 					{
-						if (i0 % 2 != 0)	n = -(int)(i0 / 2 + 1);
-						else				n = +(int)(i0 / 2);
-					}
+						if (i0 % 2 != 0) n = -(int)(i0 / 2 + 1);
+						else n = +(int)(i0 / 2);
+					} 
+					#endregion
 
-
-					str += n.ToString() + " , ";
 
 					Vector2 v = mul(Cn_1D[i0], Z.polar(n * 2 * Mathf.PI * t));
 					//
@@ -397,9 +326,8 @@ namespace SPACE_FOURIER_1
 					};
 					//
 				}
-
-				LOG.str(str);
 				//
+
 			}
 
 
@@ -415,7 +343,7 @@ namespace SPACE_FOURIER_1
 
 			Vector2 Cn(int n)
 			{
-				int N = 10000;
+				int N = 40000;
 
 
 				Vector2 sum = Vector2.zero;
@@ -486,6 +414,7 @@ namespace SPACE_FOURIER_1
 	out -   get_const_spaced_points_0(N) 
 	        get_const_spaced_points_1(N , N_e)         
 	*/
+	[System.Serializable]
 	public class PATH
 	{
 		/*
@@ -555,9 +484,8 @@ namespace SPACE_FOURIER_1
 		1 : dist
 		*/
 		float[][] LUT;
-		public void INTIALIZE_LUT()
+		public void INTIALIZE_LUT(int N = 10000)
 		{
-			int N = 10000;
 			LUT = new float[N + 1][];
 
 			float sum = 0f;
@@ -827,7 +755,6 @@ namespace SPACE_FOURIER_1
 	#endregion
 
 	#region C
-	// TODO C.t return using EASE._TYPE //
 	public static class C
 	{
 		public static float PI = Mathf.PI;
@@ -884,7 +811,7 @@ namespace SPACE_FOURIER_1
 
 		public static int frames = 30;
 		public static int i = 0;
-		public static float t { get { return EASE.f(C.i * 1f / (C.frames - 1)); } }
+		public static float t { get { return EASE.f( C.i * 1f / (C.frames - 1)); } }
 
 
 
@@ -925,6 +852,7 @@ namespace SPACE_FOURIER_1
 		public static TYPE _TYPE;
 		public static float f(float t)
 		{
+
 			if (t >= 1f) return 1f;
 			if (t <= 0f) return 0f;
 
@@ -1006,7 +934,7 @@ namespace SPACE_FOURIER_1
 
 		MeshFilter mf;
 		MeshRenderer mr;
-		GameObject G;
+		public GameObject G;
 
 		public OBJ(string name, int layer = 0)
 		{
@@ -1016,7 +944,7 @@ namespace SPACE_FOURIER_1
 			mr.sharedMaterial = new Material(Shader.Find("Unlit/Transparent"));
 
 			G.transform.parent = holder;
-			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 10);
+			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 1000);
 		}
 
 
@@ -1088,7 +1016,7 @@ namespace SPACE_FOURIER_1
 
 
 		SpriteRenderer sr;
-		GameObject G;
+		public GameObject G;
 
 		public OBJS(string name, int layer = 0)
 		{
@@ -1096,7 +1024,14 @@ namespace SPACE_FOURIER_1
 			sr = G.AddComponent<SpriteRenderer>();
 
 			G.transform.parent = OBJS.holder;
-			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 10);
+			G.transform.position = new Vector3(0f, 0f, -layer * 1f / 1000);
+		}
+
+		public OBJS(GameObject G)
+		{
+			this.G = G;
+			sr = G.GetComponent<SpriteRenderer>();
+			enable(false);
 		}
 
 
@@ -1131,7 +1066,7 @@ namespace SPACE_FOURIER_1
 		#endregion
 
 
-	} 
+	}
 	#endregion
 
 
@@ -1142,23 +1077,213 @@ namespace SPACE_FOURIER_1
 		txt.orient(int i_pivot ,int i_anchor ,V2 pos_pivot , V2 pos_anchor )
 		txt.enable(true);
 		yield return txt.write();
-		yield return txt.typeWrite_from_rand_characters();
-
-		// TO FIND A WAY TO //
-		each characters with its own TMPro.tm component
-			control animating of each characters
-		// TO FIND A WAY TO //
-
-
+		yield return txt.typeWrite();
 	*/
+
+	//
 	public class TEXT
 	{
 
+		public TMPro.TextMeshPro tm;
+		public GameObject G;
+
+
+		public TEXT(string str)
+		{
+			G = new GameObject("tm_" + str);
+
+			tm = G.AddComponent<TMPro.TextMeshPro>();
+			//
+			tm.text = str;
+			tm.alignment = TMPro.TextAlignmentOptions.Center;
+
+
+			G.transform.parent = OBJ.holder;
+			G.SetActive(false);
+		}
+
+		public TEXT(string str, GameObject G)
+		{
+			this.G = G;
+			tm = G.GetComponent<TMPro.TextMeshPro>();
+			//
+			tm.text = str;
+			tm.alignment = TMPro.TextAlignmentOptions.Center;
+
+			G.SetActive(false);
+		}
+
+
+
+
+
+		public void orient(Vector2 pos_pivot, Vector2 pos_anchor, int i_pivot, int i_anchor)
+		{
+			Vector2 a = tm.bounds.min;
+			Vector2 n = tm.bounds.max - tm.bounds.min;
+
+
+
+			Vector2 tr_pos = Vector2.zero;
+
+
+			Vector2[] handles = new Vector2[9]
+			{
+				a + new Vector2(n.x / 1 , n.y / 2),
+
+				a + new Vector2(n.x / 1 , n.y / 1),
+				a + new Vector2(n.x / 2 , n.y / 1),
+				a + new Vector2(0       , n.y / 1),
+
+				a + new Vector2(0       , n.y / 2),
+
+				a + new Vector2(0       , 0      ),
+				a + new Vector2(n.x / 2 , 0      ),
+				a + new Vector2(n.x / 1 , 0      ),
+
+				a + new Vector2(n.x / 2 , n.x / 2)
+			};
+
+
+
+			Vector2 nX = (handles[i_anchor] - handles[i_pivot]).normalized,
+					nY = new Vector2(-nX.y, nX.x);
+
+
+			float project_x = Z.dot(tr_pos - handles[i_pivot], nX),
+				  project_y = Z.dot(tr_pos - handles[i_pivot], nY);
+
+
+
+
+
+			// new_transform //
+
+			#region new_pos
+			Vector2 new_nX = (pos_anchor - pos_anchor).normalized,
+						new_nY = new Vector2(-new_nX.y, new_nX.x);
+
+
+			Vector2 new_pos = pos_pivot
+							  + new_nX * project_x * new_nX.magnitude / nX.magnitude
+							  + new_nY * project_y * new_nX.magnitude / nX.magnitude;
+			#endregion
+
+
+			#region new_scale
+			float new_scale = (pos_anchor - pos_pivot).magnitude / (handles[i_anchor] - handles[i_pivot]).magnitude;
+
+			#endregion
+
+
+			#region new_rot
+			float new_rot = Z.angle(handles[i_anchor] - handles[i_pivot] , pos_anchor - pos_pivot);
+
+
+			#endregion
+
+
+			//
+			G.transform.position = new Vector3()
+			{
+				x = new_pos.x,
+				y = new_pos.y,
+				z = G.transform.position.z
+			};
+
+			//
+			G.transform.localScale = Vector3.one * new_scale;
+
+			//
+			G.transform.localEulerAngles = new Vector3()
+			{
+				x = 0f,
+				y = 0f,
+				z = new_rot / (2 * C.PI) * 360
+			};
+
+
+		}
+
+
+
+		public IEnumerator typewrite()
+		{
+			//
+			G.SetActive(true);
+
+			string source = tm.text;
+			string rand_str = "#WAM=+.";
+
+
+			string str = "-_";
+
+			for (int i0 = 0; i0 < source.Length; i0 += 1)
+			{
+				//
+				for (int i1 = 0; i1 <= 1; i1 += 1)
+				{
+					str = replace_char_at(str,
+									str.Length - 2,
+									rand_str[Random.Range(0, rand_str.Length)]);
+
+					tm.text = str;
+
+					yield return C.wait;
+					yield return C.wait;
+
+				}
+
+				str = replace_char_at(str,
+								str.Length - 2,
+								source[i0]);
+				str += '_';
+
+				tm.text = str;
+			}
+
+
+
+			tm.text = source;
+			//
+			yield return C.wait;
+		}
+
+
+
+
+		#region ad
+		//
+		public void active(bool enable) { G.SetActive(enable); }
+
+		#endregion
+
+
+
+		#region str .... char_1D
+		//
+		static string replace_char_at(string str, int index, char c)
+		{
+			string new_str = "";
+			//
+			for (int i = 0; i < str.Length; i += 1)
+			{
+				if (index == i) { new_str += c; }
+				else { new_str += str[i]; }
+			}
+			// 
+			return new_str;
+		}
+		//
+		#endregion
+
+
 	}
+	//
 	#endregion
 
 
-	
+
 	#region CAM
 	/*
 
@@ -1933,3 +2058,111 @@ namespace SPACE_FOURIER_1
      
     
 }
+
+
+/*
+
+
+WORK-FLOW
+    FOURIER
+
+
+STUFF
+    PATH
+        P
+        pos
+        LUT
+        points
+
+OBJ
+    OBJ
+    TEXT
+
+CAM
+    
+
+
+RENDER
+    MESH
+        mesh
+
+TOOL
+    Z
+        dot
+        area
+        lerp
+    C
+        frames
+        i
+        t
+    E
+        ease
+
+
+
+
+
+
+
+
+
+
+PATH
+
+    // normal_stroke //
+    P
+    mesh( t_start , t_end )
+    change_thickness
+    change_col
+        
+    
+    
+    // dotted_stoke //
+    P
+    skew
+    mesh( t_start , t_end )
+    change_thickness
+    change_col
+    
+    
+    
+    
+TEXT
+
+    // type_write //
+    str
+    animate_write()
+        animate_to_another_str_by_backspace( new_str )
+    change_str
+    change_col
+    change_orient 
+        absolute_pos(pivot , anchor)
+    
+    
+    // scale_write //
+    str
+    animate_write()
+        animate_to_another_scale_back( new_str )
+    change_str
+    change_col
+    change_orient 
+        absolute_pos(pivot , anchor)
+    
+
+
+    
+TODO
+
+OVERLAY
+    
+    // overlay // 
+    FADE_MIST
+    
+    
+*/
+
+
+
+
+
+
